@@ -1,0 +1,41 @@
+---
+- name: Long-running job test (write heartbeat on target)
+  hosts: all
+  gather_facts: false
+  become: true
+
+  vars:
+    heartbeat_file: /tmp/aap_heartbeat.log
+    interval_seconds: 5        # écrit toutes les 5s
+    iterations: 120            # 120 * 5s = ~10 minutes
+
+  tasks:
+    - name: Ensure heartbeat file exists
+      ansible.builtin.file:
+        path: "{{ heartbeat_file }}"
+        state: touch
+        mode: "0644"
+
+    - name: Write heartbeat line every X seconds
+      ansible.builtin.shell: |
+        set -euo pipefail
+        ts="$(date -Is)"
+        echo "${ts} host={{ inventory_hostname }} job_heartbeat={{ item }}/{{ iterations }}" >> "{{ heartbeat_file }}"
+      args:
+        executable: /bin/bash
+      loop: "{{ range(1, iterations + 1) | list }}"
+
+    - name: Sleep between heartbeats (except after last one)
+      ansible.builtin.pause:
+        seconds: "{{ interval_seconds }}"
+      when: item < iterations
+      loop: "{{ range(1, iterations + 1) | list }}"
+
+    - name: Show last 5 lines for quick verification
+      ansible.builtin.shell: "tail -n 5 {{ heartbeat_file }}"
+      register: tail_out
+      changed_when: false
+
+    - name: Debug tail output
+      ansible.builtin.debug:
+        msg: "{{ tail_out.stdout_lines }}"
