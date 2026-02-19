@@ -6,35 +6,24 @@
 
   vars:
     heartbeat_file: /tmp/aap_heartbeat.log
-    interval_seconds: 5        # écrit toutes les 5s
-    iterations: 120            # 120 * 5s = ~10 minutes
+    interval_seconds: 5     # toutes les 5 secondes
+    iterations: 120         # ~10 minutes
 
   tasks:
-    - name: Ensure heartbeat file exists
-      ansible.builtin.file:
-        path: "{{ heartbeat_file }}"
-        state: touch
-        mode: "0644"
+    - name: Write heartbeat every X seconds on the target
+      ansible.builtin.shell: |
+        set -euo pipefail
+        for i in $(seq 1 {{ iterations }}); do
+          ts="$(date -Is)"
+          echo "${ts} host={{ inventory_hostname }} heartbeat=${i}/{{ iterations }}" >> "{{ heartbeat_file }}"
+          if [ "$i" -lt "{{ iterations }}" ]; then
+            sleep {{ interval_seconds }}
+          fi
+        done
+      args:
+        executable: /bin/bash
 
-    - name: Heartbeat loop (write then sleep)
-      block:
-        - name: Append heartbeat line
-          ansible.builtin.shell: |
-            set -euo pipefail
-            ts="$(date -Is)"
-            echo "${ts} host={{ inventory_hostname }} heartbeat={{ i }}/{{ iterations }}" >> "{{ heartbeat_file }}"
-          args:
-            executable: /bin/bash
-
-        - name: Sleep between heartbeats (except after last one)
-          ansible.builtin.pause:
-            seconds: "{{ interval_seconds }}"
-          when: i < iterations
-      loop: "{{ range(1, iterations + 1) | list }}"
-      loop_control:
-        loop_var: i
-
-    - name: Show last 5 lines for quick verification
+    - name: Show last 5 lines
       ansible.builtin.command: "tail -n 5 {{ heartbeat_file }}"
       register: tail_out
       changed_when: false
