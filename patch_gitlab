@@ -1,0 +1,102 @@
+---
+- name: Mise à jour GitLab depuis Artifactory
+  hosts: "gitlab_{{ env }}"
+  become: true
+  gather_facts: true
+
+  vars:
+    update_dir: /tmp/UPDATE
+    artifact_name: "{{ artifact }}"
+
+    artifactory_base_url: "https://artifactory.example.com/artifactory"
+    artifactory_repo: "rpm-gitlab-local"
+    artifact_url: "{{ artifactory_base_url }}/{{ artifactory_repo }}/{{ artifact_name }}"
+
+    artifact_remote_path: "{{ update_dir }}/{{ artifact_name }}"
+
+  pre_tasks:
+    - name: Vérifier les inputs obligatoires
+      ansible.builtin.assert:
+        that:
+          - env is defined
+          - artifact is defined
+          - artifactory_token is defined
+        fail_msg: >
+          Usage:
+          ansible-playbook update_gitlab.yml
+          -e "env=recette artifact=gitlab-ce-xxx.rpm artifactory_token=xxxx"
+
+    - name: Vérifier UTF-8
+      ansible.builtin.command: echo $LANG
+      register: lang_output
+      changed_when: false
+
+    - name: Stop si LANG n'est pas UTF-8
+      ansible.builtin.assert:
+        that:
+          - "'UTF-8' in lang_output.stdout"
+        fail_msg: "LANG actuel = {{ lang_output.stdout }}"
+
+  tasks:
+    - name: Créer le répertoire update
+      ansible.builtin.file:
+        path: "{{ update_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Télécharger le package GitLab depuis Artifactory
+      ansible.builtin.get_url:
+        url: "{{ artifact_url }}"
+        dest: "{{ artifact_remote_path }}"
+        mode: "0644"
+        headers:
+          Authorization: "Bearer {{ artifactory_token }}"
+        validate_certs: true
+      no_log: true
+
+    - name: Vérifier le checksum MD5 du package
+      ansible.builtin.command: "md5sum {{ artifact_remote_path }}"
+      register: md5_result
+      changed_when: false
+
+    - name: Afficher le checksum
+      ansible.builtin.debug:
+        var: md5_result.stdout
+
+    - name: Installer / mettre à jour GitLab
+      ansible.builtin.command: "rpm -Uvh {{ artifact_remote_path }}"
+      register: rpm_result
+
+    - name: Afficher résultat installation
+      ansible.builtin.debug:
+        var: rpm_result.stdout_lines
+
+    - name: Vérifier le statut GitLab
+      ansible.builtin.command: gitlab-ctl status
+      register: gitlab_status
+      changed_when: false
+
+    - name: Afficher statut GitLab
+      ansible.builtin.debug:
+        var: gitlab_status.stdout_lines
+
+    - name: Vérifier la version GitLab via API
+      ansible.builtin.uri:
+        url: "https://{{ inventory_hostname }}/api/v4/version"
+        method: GET
+        validate_certs: false
+      register: gitlab_version
+      changed_when: false
+
+    - name: Afficher version GitLab
+      ansible.builtin.debug:
+        var: gitlab_version.json
+
+    - name: Lancer gitlab:check
+      ansible.builtin.command: gitlab-rake gitlab:check SANITIZE=true
+      register: gitlab_check
+      changed_when: false
+
+    - name: Afficher gitlab:check
+      ansible.builtin.debug:
+        var: gitlab_check.stdout_lines
