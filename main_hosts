@@ -1,0 +1,20 @@
+CREATE TABLE main_host (
+    id                          serial PRIMARY KEY,
+    created                     timestamp with time zone NOT NULL,
+    modified                    timestamp with time zone NOT NULL,
+    description                 text NOT NULL,
+    name                        varchar(512) NOT NULL,
+    inventory_id                integer NOT NULL REFERENCES main_inventory(id),
+    enabled                     boolean NOT NULL DEFAULT true,
+    instance_id                 varchar(1024) NOT NULL,
+    variables                   text NOT NULL,
+    has_active_failures         boolean NOT NULL DEFAULT false,
+    has_inventory_sources       boolean NOT NULL DEFAULT false,
+    last_job_id                 integer NULL REFERENCES main_unifiedjob(id),
+    last_job_host_summary_id    integer NULL REFERENCES main_jobhostsummary(id),
+    ansible_facts                jsonb NULL,
+    ansible_facts_modified      timestamp with time zone NULL,
+    insights_system_id          varchar(36) NULL,
+    created_by_id               integer NULL REFERENCES auth_user(id),
+    modified_by_id              integer NULL REFERENCES auth_user(id)
+);
