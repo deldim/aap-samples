@@ -1,0 +1,21 @@
+CREATE TABLE main_inventory (
+    id                          serial PRIMARY KEY,
+    created                     timestamp with time zone NOT NULL,
+    modified                    timestamp with time zone NOT NULL,
+    description                 text NOT NULL,
+    name                        varchar(512) NOT NULL,
+    organization_id              integer NOT NULL REFERENCES main_organization(id),
+    variables                   text NOT NULL,
+    has_active_failures         boolean NOT NULL DEFAULT false,
+    total_hosts                 integer NOT NULL DEFAULT 0,
+    hosts_with_active_failures  integer NOT NULL DEFAULT 0,
+    total_groups                integer NOT NULL DEFAULT 0,
+    has_inventory_sources       boolean NOT NULL DEFAULT false,
+    total_inventory_sources     integer NOT NULL DEFAULT 0,
+    inventory_sources_with_failures integer NOT NULL DEFAULT 0,
+    kind                        varchar(32) NOT NULL DEFAULT '',
+    pending_deletion            boolean NOT NULL DEFAULT false,
+    prevent_instance_group_fallback boolean NOT NULL DEFAULT false,
+    created_by_id               integer NULL REFERENCES auth_user(id),
+    modified_by_id              integer NULL REFERENCES auth_user(id)
+);
