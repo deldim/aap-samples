@@ -1,0 +1,17 @@
+CREATE TABLE main_jobhostsummary (
+    id              serial PRIMARY KEY,
+    created         timestamp with time zone NOT NULL,
+    modified        timestamp with time zone NOT NULL,
+    job_id          integer NOT NULL REFERENCES main_job(id),
+    host_id         integer NULL REFERENCES main_host(id) ON DELETE SET NULL,
+    host_name       varchar(1024) NOT NULL DEFAULT '',
+    changed         integer NOT NULL DEFAULT 0,
+    dark            integer NOT NULL DEFAULT 0,
+    failures        integer NOT NULL DEFAULT 0,
+    ok              integer NOT NULL DEFAULT 0,
+    processed       integer NOT NULL DEFAULT 0,
+    skipped         integer NOT NULL DEFAULT 0,
+    failed          boolean NOT NULL DEFAULT false,
+    ignored         integer NOT NULL DEFAULT 0,
+    rescued         integer NOT NULL DEFAULT 0
+);
