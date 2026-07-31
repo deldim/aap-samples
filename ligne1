@@ -1,0 +1,27 @@
+SELECT
+    COUNT(*) AS executions,
+
+    ROUND(
+        100.0 * COUNT(*) FILTER (WHERE status = 'successful')
+        / NULLIF(
+            COUNT(*) FILTER (
+                WHERE status IN ('successful', 'failed', 'error')
+            ),
+            0
+        ),
+        1
+    ) AS taux_succes,
+
+    COUNT(*) FILTER (
+        WHERE status IN ('failed', 'error')
+    ) AS echecs,
+
+    ROUND(
+        AVG(elapsed) FILTER (
+            WHERE finished IS NOT NULL
+              AND elapsed > 0
+        )::numeric,
+        1
+    ) AS duree_moyenne
+FROM main_unifiedjob
+WHERE $__timeFilter(created);
