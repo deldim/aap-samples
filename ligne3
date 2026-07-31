@@ -37,3 +37,19 @@ WHERE $__timeFilter(uj.created)
       OR uj.organization_id = ${organization:raw}
   );
 
+
+
+
+
+SELECT
+    ROUND(AVG(uj.elapsed)::numeric, 1) AS value
+FROM main_unifiedjob uj
+WHERE $__timeFilter(uj.created)
+  AND uj.finished IS NOT NULL
+  AND uj.elapsed > 0
+  AND uj.status IN ('successful', 'failed', 'error')
+  AND (
+      ${organization:raw} = 0
+      OR uj.organization_id = ${organization:raw}
+  );
+
