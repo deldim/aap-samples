@@ -1,0 +1,39 @@
+SELECT COUNT(*) AS value
+FROM main_unifiedjob uj
+WHERE $__timeFilter(uj.created)
+  AND (
+      ${organization:raw} = 0
+      OR uj.organization_id = ${organization:raw}
+  );
+
+
+SELECT
+    ROUND(
+        100.0
+        * COUNT(*) FILTER (
+            WHERE uj.status = 'successful'
+        )
+        / NULLIF(
+            COUNT(*) FILTER (
+                WHERE uj.status IN ('successful', 'failed', 'error')
+            ),
+            0
+        ),
+        1
+    ) AS value
+FROM main_unifiedjob uj
+WHERE $__timeFilter(uj.created)
+  AND (
+      ${organization:raw} = 0
+      OR uj.organization_id = ${organization:raw}
+  );
+
+SELECT COUNT(*) AS value
+FROM main_unifiedjob uj
+WHERE $__timeFilter(uj.created)
+  AND uj.status IN ('failed', 'error')
+  AND (
+      ${organization:raw} = 0
+      OR uj.organization_id = ${organization:raw}
+  );
+
