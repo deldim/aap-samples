@@ -1,0 +1,19 @@
+SELECT
+    $__timeGroupAlias(created, $__interval),
+    status AS metric,
+    COUNT(*) AS value
+FROM main_unifiedjob
+WHERE $__timeFilter(created)
+GROUP BY 1, 2
+ORDER BY 1;
+
+SELECT
+    COALESCE(ujt.name, uj.name, 'Sans template') AS template,
+    COUNT(*) AS executions
+FROM main_unifiedjob uj
+LEFT JOIN main_unifiedjobtemplate ujt
+    ON ujt.id = uj.unified_job_template_id
+WHERE $__timeFilter(uj.created)
+GROUP BY 1
+ORDER BY executions DESC
+LIMIT 10;
