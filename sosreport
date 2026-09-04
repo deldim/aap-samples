@@ -1,0 +1,80 @@
+---
+- name: Generate sosreport and upload to Artifactory
+  hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    sos_output_dir: /var/tmp/sosreports
+    artifactory_base_url: "https://artifactory.example.com/artifactory"
+    artifactory_repo: "support-reports"
+    artifactory_token: "{{ vault_artifactory_token }}"
+
+  tasks:
+    - name: Ensure sosreport output directory exists
+      ansible.builtin.file:
+        path: "{{ sos_output_dir }}"
+        state: directory
+        mode: "0750"
+
+    - name: Generate sosreport
+      ansible.builtin.command:
+        cmd: >
+          sos report
+          --batch
+          --tmp-dir {{ sos_output_dir }}
+      register: sosreport_cmd
+      changed_when: true
+
+    - name: Find generated sosreport archive
+      ansible.builtin.find:
+        paths: "{{ sos_output_dir }}"
+        patterns:
+          - "sosreport-*.tar.xz"
+          - "sosreport-*.tar.gz"
+        file_type: file
+        recurse: false
+      register: sosreport_files
+
+    - name: Fail if no sosreport archive was generated
+      ansible.builtin.fail:
+        msg: "No sosreport archive found on {{ inventory_hostname }}"
+      when: sosreport_files.matched == 0
+
+    - name: Select latest sosreport archive
+      ansible.builtin.set_fact:
+        sosreport_file: >-
+          {{
+            (
+              sosreport_files.files
+              | sort(attribute='mtime', reverse=true)
+            )[0].path
+          }}
+
+    - name: Build Artifactory destination
+      ansible.builtin.set_fact:
+        artifactory_target_url: >-
+          {{ artifactory_base_url }}/{{ artifactory_repo }}/
+          {{ inventory_hostname }}/
+          {{ ansible_date_time.date }}/
+          {{ sosreport_file | basename }}
+
+    - name: Upload sosreport to Artifactory
+      ansible.builtin.uri:
+        url: "{{ artifactory_target_url | regex_replace('\\s+', '') }}"
+        method: PUT
+        src: "{{ sosreport_file }}"
+        remote_src: true
+        headers:
+          Authorization: "Bearer {{ artifactory_token }}"
+        status_code:
+          - 200
+          - 201
+        validate_certs: true
+
+    - name: Display uploaded report
+      ansible.builtin.debug:
+        msg:
+          - "Host: {{ inventory_hostname }}"
+          - "SOS report: {{ sosreport_file }}"
+          - "Uploaded to: {{ artifactory_target_url | regex_replace('\\s+', '') }}"
