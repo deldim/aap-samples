@@ -1,0 +1,65 @@
+2. Environnements et instances disponibles
+2.1 Organisation des environnements
+
+L’offre AAP est répartie sur deux environnements techniques distincts, répondant à des usages différents.
+
+Environnement Développement
+
+Cet environnement est destiné aux développeurs pour développer, tester et valider leurs automatisations avant leur utilisation sur les infrastructures cibles.
+
+Il permet de travailler dans un environnement isolé des plateformes utilisées pour l’automatisation des serveurs Hors Production et Production.
+
+Environnement Serveurs
+
+Cet environnement est destiné à l’exécution des automatisations sur les infrastructures :
+
+Hors Production ;
+Production.
+
+Les serveurs Hors Production présents dans cet environnement sont distincts des ressources utilisées dans l’environnement Développement.
+
+À retenir
+L’environnement Développement et les serveurs Hors Production de l’environnement Serveurs constituent deux périmètres différents. Le choix de l’environnement AAP dépend donc de la cible de l’automatisation.
+
+2.2 Instances AAP disponibles
+
+Dans chacun des deux environnements, deux versions d’Ansible Automation Platform coexistent actuellement :
+
+Environnement	AAP 2.4	AAP 2.6
+Développement	Legacy	OCP – Plateforme cible
+Serveurs	Legacy	OCP – Plateforme cible
+
+Les instances AAP 2.4 correspondent aux plateformes historiques (Legacy).
+
+Les instances AAP 2.6, déployées sur OpenShift Container Platform (OCP), constituent les nouvelles plateformes vers lesquelles les usages sont progressivement migrés.
+
+2.3 Quelle plateforme utiliser ?
+
+Le choix de la plateforme dépend principalement de la cible de l’automatisation.
+
+Pour développer et tester une automatisation : utiliser l’instance AAP de l’environnement Développement.
+
+Pour automatiser des serveurs Hors Production ou Production : utiliser l’instance AAP de l’environnement Serveurs.
+
+Dans les deux cas, AAP 2.6 doit être privilégiée pour les nouveaux usages, AAP 2.4 étant maintenue temporairement pour assurer la continuité des automatisations existantes pendant la migration.
+
+À retenir
+AAP 2.6 est la plateforme cible. Les instances AAP 2.4 sont considérées comme Legacy et ont vocation à être progressivement remplacées.
+
+2.4 Migration AAP 2.4 vers AAP 2.6
+
+La plateforme est actuellement dans une phase de transition entre AAP 2.4 et AAP 2.6.
+
+La migration est réalisée progressivement afin de transférer les automatisations existantes vers les nouvelles instances AAP 2.6 tout en assurant la continuité de service.
+
+Pendant cette période, les deux versions peuvent donc être accessibles simultanément. Les utilisateurs disposant d’automatisations sur AAP 2.4 seront amenés à les migrer vers AAP 2.6 selon les modalités définies par l’équipe AAP.
+
+2.5 Accès aux différentes instances
+
+Je mettrais ici un petit tableau très pratique, plutôt que beaucoup de texte :
+
+Usage	Version	URL
+Développement	AAP 2.6	[URL AAP DEV 2.6]
+Développement – Legacy	AAP 2.4	[URL AAP DEV 2.4]
+Serveurs HP / PROD	AAP 2.6	[URL AAP SERVEURS 2.6]
+Serveurs HP / PROD – Legacy	AAP 2.4	[URL AAP SERVEURS 2.4]
