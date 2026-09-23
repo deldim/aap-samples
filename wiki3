@@ -1,0 +1,62 @@
+Accès à la plateforme
+3.1 Prérequis d’accès
+
+L’accès aux différentes instances AAP est soumis à des droits d’accès définis en fonction du profil de l’utilisateur, de son équipe et de l’environnement concerné.
+
+Avant toute utilisation de la plateforme, l’utilisateur doit disposer :
+
+d’un compte utilisateur valide ;
+des habilitations nécessaires pour accéder à l’environnement concerné ;
+des droits correspondant à son périmètre d’intervention ;
+des accès réseau nécessaires pour joindre l’instance AAP.
+
+Les accès aux environnements Développement et Serveurs sont gérés indépendamment. Disposer d’un accès à l’un des environnements ne donne donc pas automatiquement accès à l’autre.
+
+3.2 Demander un accès à AAP
+
+La demande d’accès doit être réalisée via [nom de votre outil / procédure interne].
+
+Lors de la demande, il convient de préciser notamment :
+
+l’environnement souhaité : Développement ou Serveurs ;
+le périmètre concerné ;
+l’équipe / organisation de rattachement ;
+le niveau de droits nécessaire ;
+la justification du besoin, lorsque celle-ci est requise.
+
+À retenir
+Les habilitations doivent être demandées en fonction du besoin réel de l’utilisateur. Un accès à l’environnement Développement ne vaut pas accès à l’environnement Serveurs, et inversement.
+
+3.3 Organisations, Teams et rôles
+
+AAP s’appuie sur un modèle de gestion des droits permettant de contrôler les actions réalisables par chaque utilisateur.
+
+Les utilisateurs sont rattachés, selon leur périmètre, à une Organization et/ou à une ou plusieurs Teams.
+
+Les rôles attribués déterminent ensuite les actions autorisées sur les différentes ressources de la plateforme : Inventories, Projects, Job Templates, Credentials, Execution Environments, etc.
+
+Le principe du moindre privilège est appliqué : seuls les droits nécessaires à la réalisation des activités de l’utilisateur doivent être attribués.
+
+3.4 Accès aux instances AAP 2.4 et AAP 2.6
+
+Durant la période de migration, les instances AAP 2.4 Legacy et AAP 2.6 peuvent coexister au sein d’un même environnement.
+
+Les accès à AAP 2.4 restent disponibles pour les automatisations qui n’ont pas encore été migrées.
+
+Pour tout nouveau besoin, l’utilisation d’AAP 2.6 doit être privilégiée.
+
+Les modalités d’accès ou d’habilitation peuvent différer entre les plateformes 2.4 et 2.6. Les utilisateurs doivent donc se référer à la procédure correspondant à l’instance concernée.
+
+3.5 Vérification de son accès
+
+Après attribution des habilitations, l’utilisateur doit vérifier qu’il peut :
+
+se connecter à l’instance concernée ;
+accéder à son Organization / Team ;
+visualiser les ressources correspondant à son périmètre ;
+disposer des actions attendues conformément au rôle qui lui a été attribué.
+
+En cas d’absence d’une ressource ou d’une fonctionnalité attendue, il convient d’abord de vérifier les habilitations avant de considérer le comportement comme un incident technique.
+
+Bon à savoir
+L’accès à l’interface AAP et l’accès aux serveurs cibles sont deux sujets différents. Être habilité sur AAP ne garantit pas qu’un Job puisse joindre ou s’authentifier sur une cible. Les flux réseau, comptes techniques et mécanismes d’authentification sont abordés dans l’axe suivant : Connectivité et accès aux systèmes cibles.
