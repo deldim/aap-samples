@@ -1,0 +1,53 @@
+1. Présentation d’Ansible Automation Platform
+1.1 Qu’est-ce qu’Ansible Automation Platform ?
+
+Ansible Automation Platform (AAP) est la plateforme d’automatisation mise à disposition pour industrialiser, centraliser et sécuriser l’exécution des automatisations Ansible.
+
+Elle permet aux équipes de développer et d’exécuter leurs automatisations depuis un environnement centralisé, tout en bénéficiant d’un cadre commun pour la gestion des accès, des inventaires, des credentials, des environnements d’exécution et du suivi des traitements.
+
+AAP s’appuie notamment sur Automation Controller pour orchestrer et superviser l’exécution des automatisations.
+
+1.2 Pourquoi utiliser AAP ?
+
+L’utilisation d’AAP permet notamment de :
+
+Centraliser l’exécution des automatisations Ansible ;
+Standardiser les méthodes d’exécution entre les différentes équipes ;
+Sécuriser l’accès aux infrastructures et la gestion des credentials ;
+Contrôler les accès grâce à une gestion des utilisateurs, équipes et rôles ;
+Tracer les exécutions et conserver l’historique des jobs ;
+Planifier et automatiser des traitements récurrents ;
+Faciliter l’industrialisation des playbooks Ansible ;
+Fournir un environnement d’exécution maîtrisé et maintenu par l’équipe en charge de la plateforme.
+1.3 Principaux cas d’usage
+
+AAP peut être utilisé pour automatiser différentes opérations sur les infrastructures et services accessibles depuis la plateforme, par exemple :
+
+configuration de serveurs ;
+déploiement et mise à jour de composants ;
+opérations d’administration ;
+collecte d’informations techniques ;
+contrôles de conformité ;
+opérations de maintenance ;
+orchestration de traitements sur plusieurs systèmes ;
+exécution planifiée de tâches récurrentes.
+
+Les possibilités d’automatisation dépendent notamment des protocoles supportés, des flux réseau disponibles et des droits accordés à l’utilisateur.
+
+1.4 Organisation générale de l’offre AAP
+
+L’offre AAP repose sur deux environnements techniques distincts, répondant à des usages différents.
+
+Un premier environnement est destiné au développement et aux tests des automatisations par les développeurs.
+
+Un second environnement permet l’exécution des automatisations sur les serveurs Hors Production et Production.
+
+Dans chacun de ces environnements, deux générations de la plateforme coexistent actuellement :
+
+AAP 2.4 – Legacy, correspondant à la plateforme historique, et AAP 2.6 – OCP, constituant la nouvelle plateforme cible.
+
+Une migration progressive des usages et automatisations de la plateforme AAP 2.4 vers AAP 2.6 est actuellement en cours.
+
+À retenir : pour tout nouveau besoin, il convient de privilégier la plateforme AAP 2.6, AAP 2.4 étant progressivement destinée à être remplacée dans le cadre de la migration.
+
+Les différents environnements, leurs usages et les règles permettant de déterminer l’instance à utiliser sont détaillés dans la section 2 – Environnements et instances disponibles.
