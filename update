@@ -1,0 +1,175 @@
+---
+- name: Patch GitLab
+  hosts: gitlab
+  become: true
+  gather_facts: true
+  serial: 1
+
+  vars:
+    # À exposer dans la Survey AAP
+    target_version: ""
+    perform_backup: true
+
+    gitlab_package: "gitlab-ee"
+    gitlab_health_url: "http://127.0.0.1/-/health"
+
+  pre_tasks:
+
+    # ============================================================
+    # VALIDATION
+    # ============================================================
+
+    - name: Validate target version
+      ansible.builtin.assert:
+        that:
+          - target_version | length > 0
+        fail_msg: "target_version must be provided."
+
+    - name: Check operating system
+      ansible.builtin.assert:
+        that:
+          - ansible_os_family == "RedHat"
+        fail_msg: >
+          This playbook currently supports RedHat-based distributions only.
+
+    # ============================================================
+    # CURRENT VERSION
+    # ============================================================
+
+    - name: Get currently installed GitLab version
+      ansible.builtin.command:
+        cmd: rpm -q {{ gitlab_package }} --qf '%{VERSION}-%{RELEASE}'
+      register: current_gitlab_version
+      changed_when: false
+
+    - name: Display upgrade information
+      ansible.builtin.debug:
+        msg:
+          - "Current version : {{ current_gitlab_version.stdout }}"
+          - "Target version  : {{ target_version }}"
+
+    # ============================================================
+    # PRE-PATCH HEALTH CHECK
+    # ============================================================
+
+    - name: Check GitLab services before patch
+      ansible.builtin.command:
+        cmd: gitlab-ctl status
+      register: gitlab_status_before
+      changed_when: false
+
+    - name: Run GitLab application check
+      ansible.builtin.command:
+        cmd: gitlab-rake gitlab:check SANITIZE=true
+      register: gitlab_check_before
+      changed_when: false
+
+    - name: Check available disk space
+      ansible.builtin.shell: |
+        set -o pipefail
+        df -h /var/opt/gitlab
+      args:
+        executable: /bin/bash
+      register: disk_space
+      changed_when: false
+
+    - name: Display available disk space
+      ansible.builtin.debug:
+        var: disk_space.stdout_lines
+
+    # ============================================================
+    # BACKUP
+    # ============================================================
+
+    - name: Create GitLab backup
+      ansible.builtin.command:
+        cmd: gitlab-backup create
+      when: perform_backup | bool
+      register: gitlab_backup
+
+    - name: Backup GitLab configuration
+      ansible.builtin.command:
+        cmd: gitlab-ctl backup-etc
+      when: perform_backup | bool
+      register: gitlab_config_backup
+
+
+  tasks:
+
+    # ============================================================
+    # PATCH / UPGRADE
+    # ============================================================
+
+    - name: Install requested GitLab version
+      ansible.builtin.dnf:
+        name: "{{ gitlab_package }}-{{ target_version }}"
+        state: present
+        update_only: true
+      register: gitlab_upgrade
+
+    - name: Display package installation result
+      ansible.builtin.debug:
+        var: gitlab_upgrade
+
+    # Normally the GitLab RPM already executes the required
+    # configuration steps, but this guarantees configuration state.
+    - name: Reconfigure GitLab
+      ansible.builtin.command:
+        cmd: gitlab-ctl reconfigure
+      when: gitlab_upgrade.changed
+
+    # ============================================================
+    # POST-PATCH CHECKS
+    # ============================================================
+
+    - name: Get installed version after patch
+      ansible.builtin.command:
+        cmd: rpm -q {{ gitlab_package }} --qf '%{VERSION}-%{RELEASE}'
+      register: installed_gitlab_version
+      changed_when: false
+
+    - name: Display installed version
+      ansible.builtin.debug:
+        msg: >
+          GitLab version after patch:
+          {{ installed_gitlab_version.stdout }}
+
+    - name: Check GitLab services
+      ansible.builtin.command:
+        cmd: gitlab-ctl status
+      register: gitlab_status_after
+      changed_when: false
+
+    - name: Run GitLab application check after patch
+      ansible.builtin.command:
+        cmd: gitlab-rake gitlab:check SANITIZE=true
+      register: gitlab_check_after
+      changed_when: false
+
+    - name: Wait for GitLab health endpoint
+      ansible.builtin.uri:
+        url: "{{ gitlab_health_url }}"
+        method: GET
+        status_code: 200
+        validate_certs: false
+      register: gitlab_health
+      retries: 20
+      delay: 15
+      until: gitlab_health.status == 200
+
+    # ============================================================
+    # SUMMARY
+    # ============================================================
+
+    - name: Patch summary
+      ansible.builtin.debug:
+        msg:
+          - "============================================"
+          - "        GitLab patch completed"
+          - "============================================"
+          - "Host            : {{ inventory_hostname }}"
+          - "Previous version: {{ current_gitlab_version.stdout }}"
+          - "Requested       : {{ target_version }}"
+          - "Installed       : {{ installed_gitlab_version.stdout }}"
+          - "Health          : OK"
+          - "============================================"
