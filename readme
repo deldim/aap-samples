@@ -1,0 +1,230 @@
+# SOS Report – Ansible Playbook
+
+## Présentation
+
+Ce playbook automatise la génération de **SOS Reports** sur un ou plusieurs serveurs Linux depuis **Ansible Automation Platform (AAP)**, puis leur transfert vers **Artifactory**.
+
+Le workflow réalise les opérations suivantes :
+
+1. Récupération du ou des serveurs renseignés dans le Survey AAP.
+2. Ajout dynamique des hosts nécessaires à l'exécution.
+3. Génération du SOS Report sur chaque serveur.
+4. Recherche des archives générées.
+5. Upload des archives vers Artifactory.
+6. Nettoyage des fichiers temporaires.
+
+---
+
+## Fonctionnement
+
+```text
+AAP Job Template
+      |
+      v
+Survey : target_hosts
+      |
+      v
+Ajout dynamique des hosts
+      |
+      v
+Génération SOS Report
+      |
+      v
+/var/tmp/sosreports/
+      |
+      v
+Recherche des archives
+      |
+      v
+Upload Artifactory
+      |
+      v
+Nettoyage
+```
+
+---
+
+## Variable `target_hosts`
+
+Les serveurs sur lesquels le SOS Report doit être exécuté sont définis via la variable :
+
+```yaml
+target_hosts
+```
+
+Cette variable est renseignée depuis le **Survey du Job Template AAP**.
+
+Exemple :
+
+```text
+server01.example.local
+```
+
+Le playbook utilise cette information pour construire dynamiquement les hosts nécessaires à l'exécution.
+
+Cela permet notamment de lancer le playbook sur un serveur qui n'est pas nécessairement déjà déclaré dans l'inventaire statique associé au Job Template.
+
+---
+
+## Ajout dynamique des hosts
+
+Les serveurs renseignés dans `target_hosts` sont ajoutés dynamiquement à l'inventaire Ansible à l'aide du module :
+
+```yaml
+ansible.builtin.add_host
+```
+
+Un groupe temporaire peut ainsi être créé pour la durée du playbook.
+
+Le play suivant cible ensuite ce groupe afin d'exécuter la génération du SOS Report.
+
+Cette approche permet de ne pas dépendre exclusivement des hosts présents initialement dans l'inventaire AAP.
+
+---
+
+## Génération du SOS Report
+
+Le SOS Report est généré sur chaque serveur cible.
+
+Les fichiers sont stockés temporairement dans :
+
+```text
+/var/tmp/sosreports
+```
+
+La génération est effectuée en mode non interactif afin d'être compatible avec une exécution depuis AAP.
+
+---
+
+## Détection des archives
+
+Une exécution de `sos report` peut générer plusieurs fichiers.
+
+Le playbook recherche donc les fichiers générés dans :
+
+```text
+/var/tmp/sosreports
+```
+
+Il ne doit pas supposer qu'un seul fichier est présent.
+
+Les archives trouvées sont ensuite traitées individuellement pour leur transfert vers Artifactory.
+
+---
+
+## Upload vers Artifactory
+
+Après génération, les archives SOS Report sont envoyées vers **Artifactory**.
+
+L'objectif est de centraliser les diagnostics et de permettre leur récupération ultérieure, notamment pour une analyse ou une transmission au support.
+
+Le stockage peut être organisé par serveur afin de facilement identifier l'origine de chaque SOS Report.
+
+---
+
+## Nettoyage
+
+Une fois les fichiers correctement transférés vers Artifactory, les fichiers temporaires générés sur le serveur sont supprimés.
+
+Répertoire concerné :
+
+```text
+/var/tmp/sosreports
+```
+
+Le nettoyage intervient après le transfert afin d'éviter de supprimer une archive avant son upload.
+
+---
+
+## Exécution parallèle
+
+Le playbook utilise :
+
+```yaml
+serial: 3
+```
+
+Les serveurs sont donc traités par groupes de trois.
+
+Cette limitation évite de lancer simultanément un nombre trop important de SOS Reports et permet de limiter la charge sur l'infrastructure.
+
+---
+
+## Ansible Facts
+
+Le playbook utilise :
+
+```yaml
+gather_facts: false
+```
+
+Les facts Ansible ne sont donc pas collectés automatiquement.
+
+La variable suivante n'est par conséquent pas disponible :
+
+```yaml
+ansible_date_time
+```
+
+Si un timestamp est nécessaire, il doit être généré indépendamment des Ansible Facts.
+
+---
+
+## Prérequis
+
+Les serveurs cibles doivent :
+
+- être accessibles depuis l'environnement d'exécution AAP ;
+- avoir `sos` installé ;
+- être résolvables par leur hostname ;
+- permettre à l'utilisateur utilisé par AAP d'exécuter les commandes nécessaires ;
+- disposer de suffisamment d'espace dans `/var/tmp`.
+
+AAP doit également disposer des credentials nécessaires pour :
+
+- se connecter aux serveurs cibles ;
+- envoyer les archives vers Artifactory.
+
+---
+
+## Survey AAP
+
+Le Job Template expose la variable :
+
+```text
+target_hosts
+```
+
+L'utilisateur renseigne le ou les serveurs sur lesquels le diagnostic doit être effectué.
+
+Exemple :
+
+```text
+server01.example.local
+```
+
+Le playbook utilise ensuite cette valeur pour créer dynamiquement les hosts nécessaires à l'exécution.
+
+---
+
+## Résultat attendu
+
+Pour chaque serveur demandé :
+
+```text
+Host fourni via Survey
+        ↓
+Ajout dynamique dans Ansible
+        ↓
+Connexion au serveur
+        ↓
+Génération SOS Report
+        ↓
+Détection des fichiers générés
+        ↓
+Upload vers Artifactory
+        ↓
+Nettoyage des fichiers temporaires
+```
+
+À la fin de l'exécution, les SOS Reports sont disponibles dans Artifactory et les fichiers temporaires présents sur les serveurs ont été nettoyés.
