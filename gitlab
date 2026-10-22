@@ -1,0 +1,282 @@
+# 2. État des lieux technique — GitLab
+
+## 2.1. Présentation générale
+
+GitLab est une plateforme de gestion de code source permettant l'hébergement des dépôts Git, le contrôle de versions et l'intégration et la livraison continues (CI/CD).
+
+Le périmètre étudié comprend trois instances GitLab, réparties sur les environnements de recette, préproduction et production.
+
+Le présent chapitre décrit l'architecture déployée, les configurations système et applicatives, les mécanismes d'exploitation ainsi que les éventuelles divergences et anomalies constatées.
+
+## 2.2. Inventaire des infrastructures
+
+### 2.2.1. Caractéristiques des VM
+
+| Caractéristique | REC | PPD | PRD |
+|---|---|---|---|
+| Hostname | À relever | À relever | À relever |
+| Adresse IP | À relever | À relever | À relever |
+| Distribution Linux | À relever | À relever | À relever |
+| Version OS | À relever | À relever | À relever |
+| Version kernel | À relever | À relever | À relever |
+| vCPU | À relever | À relever | À relever |
+| RAM | À relever | À relever | À relever |
+| Stockage | À relever | À relever | À relever |
+| Version GitLab | À relever | À relever | À relever |
+| Type d'installation | À relever | À relever | À relever |
+
+### 2.2.2. Architecture technique
+
+Pour chaque instance, l'analyse portera sur :
+
+- Le type de déploiement GitLab.
+- Les services et processus associés.
+- Les points d'entrée HTTP/HTTPS.
+- La présence éventuelle d'un reverse proxy ou load balancer.
+- La configuration du stockage des repositories et des artefacts.
+- Les dépendances réseau et applicatives.
+- Les éventuels composants GitLab hébergés hors de la VM.
+
+Un schéma d'architecture sera établi à partir de la configuration constatée.
+
+## 2.3. Audit du socle système
+
+### 2.3.1. Système d'exploitation
+
+Contrôles à réaliser :
+
+- Version du système d'exploitation et du kernel.
+- Niveau de patching.
+- Repositories système configurés.
+- Packages installés et obsolètes.
+- Présence de services inutiles ou en échec.
+- Paramètres système particuliers.
+
+### 2.3.2. Configuration SELinux
+
+Les contrôles porteront sur :
+
+- Présence des packages SELinux.
+- Mode d'exécution : Enforcing, Permissive ou Disabled.
+- Configuration persistante.
+- Politiques et contextes associés à GitLab.
+- Écarts éventuels par rapport aux standards de sécurité applicables.
+
+La présence de SELinux ne sera pas considérée comme suffisante pour conclure à la conformité : son état et son paramétrage seront également vérifiés.
+
+### 2.3.3. Arborescence et stockage
+
+L'analyse portera sur :
+
+- Partitionnement des volumes.
+- Points de montage.
+- Organisation des répertoires applicatifs.
+- Séparation des binaires, configurations, données et journaux.
+- Droits et propriétaires des répertoires.
+- Occupation disque et inodes.
+- Cohérence de l'arborescence entre les environnements.
+
+La conformité sera évaluée au regard des standards système retenus et des préconisations applicables à la méthode d'installation de GitLab.
+
+### 2.3.4. Configuration régionale et packages linguistiques
+
+Vérifications :
+
+- Configuration des locales système.
+- Disponibilité des locales françaises.
+- Présence des packages linguistiques requis.
+- Persistance des configurations après mise à jour système.
+- Historique des installations, mises à jour et suppressions de packages.
+
+Une attention particulière sera portée à la disponibilité de `glibc-langpack-fr`, compte tenu des anomalies signalées lors de précédentes opérations de patching sur le périmètre.
+
+## 2.4. Audit applicatif GitLab
+
+### 2.4.1. Installation et configuration
+
+- Édition et version GitLab.
+- Méthode d'installation.
+- Emplacement des fichiers de configuration.
+- Paramètres applicatifs spécifiques.
+- Configuration des certificats SSL/TLS.
+- Paramètres de journalisation.
+- Versions et support des composants associés.
+
+### 2.4.2. Services et disponibilité
+
+- Inventaire des services GitLab.
+- État des processus.
+- Configuration du démarrage automatique.
+- Dépendances entre services.
+- Santé applicative.
+- Analyse des erreurs présentes dans les journaux.
+- Comportement au redémarrage de la VM, sur la base des observations ou tests autorisés.
+
+### 2.4.3. Stockage et données
+
+- Localisation des repositories Git.
+- Volumétrie des données.
+- Stockage des artefacts CI/CD.
+- Journaux applicatifs et rotation.
+- Gestion de la croissance du stockage.
+- Politique de conservation et de nettoyage.
+
+### 2.4.4. Authentification et sécurité
+
+- Modes d'authentification configurés.
+- Intégration éventuelle avec les annuaires d'entreprise.
+- Gestion des comptes et privilèges administratifs.
+- Certificats et dates d'expiration.
+- Gestion des tokens et comptes techniques.
+- Contrôle des droits sur les répertoires sensibles.
+
+### 2.4.5. CI/CD et dépendances
+
+- Présence et configuration des GitLab Runners.
+- Modalités d'exécution des pipelines.
+- Connectivité vers les services externes.
+- Dépendances envers Artifactory et les repositories logiciels.
+- Gestion des variables et credentials.
+- Intégration éventuelle avec AAP.
+
+## 2.5. Exploitation et maintenance
+
+### 2.5.1. Opérations courantes
+
+Recensement des procédures techniques :
+
+- Vérification de l'état de GitLab.
+- Démarrage, arrêt et redémarrage des services.
+- Consultation des logs.
+- Vérification de la connectivité.
+- Diagnostic des erreurs applicatives.
+- Nettoyage et contrôle du stockage.
+
+### 2.5.2. Patching et mises à jour
+
+- Versions actuellement déployées.
+- Méthodes de mise à jour.
+- Dépendances et prérequis.
+- Précautions avant intervention.
+- Procédures de validation.
+- Possibilités et limites de retour arrière.
+
+### 2.5.3. Sauvegarde et restauration
+
+- Mécanisme de sauvegarde utilisé.
+- Périmètre des données sauvegardées.
+- Fréquence et rétention.
+- Stockage des sauvegardes.
+- Procédures de restauration.
+- Existence de tests de restauration documentés.
+
+### 2.5.4. Supervision
+
+- Outils de monitoring utilisés.
+- Services et ressources supervisés.
+- Métriques de disponibilité.
+- Alertes configurées.
+- Centralisation des journaux.
+
+## 2.6. Analyse comparative REC / PPD / PRD
+
+L'objectif est d'identifier les divergences techniques et de déterminer si elles sont attendues, justifiées ou nécessitent une investigation.
+
+| Critère | REC | PPD | PRD |
+|---|---|---|---|
+| Version OS | À relever | À relever | À relever |
+| Version GitLab | À relever | À relever | À relever |
+| CPU / RAM | À relever | À relever | À relever |
+| Partitionnement | À relever | À relever | À relever |
+| SELinux | À relever | À relever | À relever |
+| Services au démarrage | À relever | À relever | À relever |
+| Configuration applicative | À relever | À relever | À relever |
+| Certificats TLS | À relever | À relever | À relever |
+| Sauvegardes | À relever | À relever | À relever |
+| Monitoring | À relever | À relever | À relever |
+
+Chaque divergence significative fera l'objet d'une description, d'une justification éventuelle et d'une évaluation de son impact.
+
+## 2.7. Anomalies et incidents identifiés
+
+### 2.7.1. Indisponibilité des interfaces GitLab
+
+**Environnements concernés :** REC et PPD.
+
+**Constat historique :** une indisponibilité des interfaces GitLab REC et PPD a été signalée, conjointement à une indisponibilité d'Artifactory PPD.
+
+**Éléments de contexte :** les composants concernés étaient situés dans une même zone réseau. Une problématique DNS ou réseau a été envisagée lors du diagnostic.
+
+**Cause racine :** non confirmée à ce stade.
+
+**Statut actuel :** à vérifier.
+
+**Investigations à documenter :**
+- Disponibilité et état des services locaux.
+- Résolution DNS.
+- Connectivité réseau.
+- Accessibilité des interfaces HTTP/HTTPS.
+- Journaux des services.
+- Référence et conclusion du ticket d'incident.
+
+### 2.7.2. Autres anomalies
+
+Les anomalies supplémentaires relevées au cours des contrôles seront consignées selon la structure suivante :
+
+| Champ | Description |
+|---|---|
+| Identifiant | Référence unique |
+| Composant | Serveur ou service concerné |
+| Symptôme | Dysfonctionnement constaté |
+| Cause | Confirmée ou non déterminée |
+| Impact | Effets techniques observés |
+| Résolution | Correction ou contournement |
+| Statut | Ouvert, résolu, à confirmer |
+| Justificatif | Logs, commandes, ticket |
+
+## 2.8. Synthèse et points de vigilance
+
+Cette section sera renseignée à l'issue des relevés techniques et de l'analyse comparative.
+
+Elle présentera :
+
+- Les caractéristiques principales des installations GitLab.
+- Les divergences entre les trois environnements.
+- Les anomalies confirmées.
+- Les risques techniques identifiés.
+- Les points nécessitant une investigation complémentaire.
+- Les éventuelles recommandations.
+
+Les constats seront distingués des hypothèses et des contrôles non réalisés.
+
+---
+
+**Fin du chapitre 2 — GitLab.**
+
+
+echo "=== SYSTEME ==="
+hostname -f
+cat /etc/os-release
+uname -r
+nproc
+free -h
+uptime
+
+echo "=== PARTITIONS ==="
+lsblk -f
+df -hPT
+findmnt
+
+echo "=== SELINUX ==="
+rpm -q selinux-policy-targeted policycoreutils libselinux-utils
+sestatus
+getenforce
+
+echo "=== LOCALES ==="
+localectl status
+rpm -q glibc-langpack-fr
+locale -a | grep -i fr_FR
+
+echo "=== GITLAB ==="
+rpm -q gitlab-ee gitlab-ce
+systemctl list-unit-files --type=service | grep -i gitlab
