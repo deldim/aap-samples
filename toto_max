@@ -1,0 +1,145 @@
+# 1. Présentation générale du périmètre
+
+## 1.1. Objet du document
+
+Le présent document a pour objet de dresser un état des lieux technique des infrastructures et plateformes DevOps déployées sur les environnements de recette (REC), préproduction (PPD) et production (PRD).
+
+L'analyse porte sur les éléments suivants :
+
+- Inventaire des infrastructures et des composants applicatifs.
+- Architecture technique et interactions entre les composants.
+- Configurations système et applicatives.
+- Versions logicielles et niveaux de maintenance.
+- Ressources matérielles et capacités de stockage.
+- Disponibilité, supervision et sauvegardes.
+- Sécurité et gestion des accès.
+- Comparaison des configurations entre environnements.
+- Identification des anomalies, risques techniques et points de vigilance.
+
+Les observations seront accompagnées, lorsque cela est possible, des éléments techniques ayant permis de les établir.
+
+## 1.2. Description du périmètre
+
+Le périmètre étudié comprend trois environnements distincts :
+
+**Recette (REC)**
+
+Cet environnement comprend deux machines virtuelles hébergeant respectivement GitLab et Artifactory.
+
+**Préproduction (PPD)**
+
+Cet environnement comprend huit machines virtuelles réparties entre GitLab, Artifactory, Ansible Automation Platform (AAP) et PostgreSQL.
+
+**Production (PRD)**
+
+L'environnement de production dispose de la même répartition des composants et du même nombre de VM que la préproduction.
+
+L'équivalence des configurations techniques et applicatives entre PPD et PRD fera l'objet d'une analyse détaillée.
+
+## 1.3. Inventaire des infrastructures
+
+Le périmètre comprend **18 machines virtuelles**.
+
+| Composant | REC | PPD | PRD | Total |
+|---|---:|---:|---:|---:|
+| GitLab | 1 | 1 | 1 | 3 |
+| Artifactory | 1 | 1 | 1 | 3 |
+| AAP Controllers | — | 3 | 3 | 6 |
+| AAP Execution Nodes | — | 2 | 2 | 4 |
+| PostgreSQL | — | 1 | 1 | 2 |
+| **Total** | **2** | **8** | **8** | **18** |
+
+Pour chaque machine virtuelle, les caractéristiques suivantes seront relevées :
+
+- Nom du serveur et environnement.
+- Système d'exploitation et version.
+- Ressources CPU et mémoire.
+- Configuration et occupation du stockage.
+- Services et composants installés.
+- Versions applicatives.
+- Paramètres techniques spécifiques.
+
+## 1.4. Présentation des composants
+
+### 1.4.1. GitLab
+
+GitLab est une plateforme de gestion de code source proposant notamment des fonctionnalités de gestion des dépôts Git et de CI/CD.
+
+Le périmètre comporte trois instances, réparties entre REC, PPD et PRD.
+
+### 1.4.2. Artifactory
+
+Artifactory est une plateforme de gestion des artefacts logiciels et des dépôts de packages.
+
+Trois instances sont présentes, à raison d'une par environnement.
+
+### 1.4.3. Ansible Automation Platform
+
+Ansible Automation Platform est utilisée pour l'orchestration et l'exécution des automatisations.
+
+Les infrastructures PPD et PRD comportent chacune trois Automation Controllers et deux Execution Nodes.
+
+Les Execution Environments (EE) sont gérés localement sur les Execution Nodes.
+
+Le périmètre ne dispose pas d'Automation Hub local ni de Builder dédié. Les images EE sont construites depuis un Builder externe au périmètre, puis transférées et importées localement sur les nœuds d'exécution.
+
+### 1.4.4. PostgreSQL
+
+Chaque environnement PPD et PRD comporte une machine virtuelle PostgreSQL associée à l'infrastructure AAP.
+
+La configuration des instances, leurs versions, les mécanismes de disponibilité et les modalités de sauvegarde seront documentés dans le chapitre consacré à PostgreSQL.
+
+## 1.5. Architecture et dépendances techniques
+
+L'analyse de l'architecture portera sur :
+
+- La répartition des composants sur les différentes VM.
+- Les communications entre GitLab, Artifactory et AAP.
+- Les communications entre les Controllers, les Execution Nodes et PostgreSQL.
+- Les services réseau nécessaires au fonctionnement des plateformes.
+- Les dépendances externes : DNS, annuaires, gestion des secrets, load balancers et autres services mutualisés, selon les configurations constatées.
+- Les mécanismes de distribution et de stockage des Execution Environments.
+
+Les flux, ports, protocoles et dépendances seront identifiés à partir des configurations effectivement relevées.
+
+## 1.6. Méthodologie d'analyse
+
+L'état des lieux sera structuré **par produit**, avec une analyse distincte des environnements concernés.
+
+Chaque composant fera l'objet des contrôles suivants :
+
+1. Inventaire et architecture technique.
+2. Versions et configurations applicatives.
+3. Configuration du système d'exploitation et ressources.
+4. Services, processus et disponibilité.
+5. Stockage, sauvegardes et supervision.
+6. Sécurité et gestion des accès.
+7. Procédures techniques de maintenance.
+8. Comparaison entre environnements.
+9. Anomalies constatées et points de vigilance.
+
+## 1.7. Analyse des divergences et anomalies
+
+Les différences relevées entre les environnements seront documentées et qualifiées en fonction de leur impact technique.
+
+Une distinction sera établie entre :
+
+- **Configurations conformes :** éléments pour lesquels aucun écart ou dysfonctionnement n'a été constaté au regard des critères vérifiés.
+- **Divergences justifiées :** différences techniques documentées et cohérentes avec les caractéristiques des environnements.
+- **Divergences non justifiées :** différences nécessitant une analyse complémentaire ou une correction.
+- **Anomalies confirmées :** dysfonctionnements ou configurations incorrectes établis sur la base de preuves techniques.
+- **Points à vérifier :** éléments pour lesquels les informations disponibles ne permettent pas encore de conclure.
+
+Pour chaque anomalie, les symptômes, les composants concernés, les éléments de diagnostic, les impacts et les éventuelles actions correctives seront précisés.
+
+## 1.8. Périmètre des contrôles
+
+L'analyse porte sur les 18 VM identifiées et leurs composants logiciels.
+
+Les services et infrastructures externes ne sont pas inclus dans l'inventaire principal, mais leurs dépendances avec les produits audités seront documentées.
+
+Les résultats refléteront les configurations et les états observés au moment des relevés techniques. Toute vérification non réalisée sera explicitement identifiée.
+
+---
+
+**Fin du chapitre 1.**
