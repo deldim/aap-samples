@@ -280,3 +280,20 @@ locale -a | grep -i fr_FR
 echo "=== GITLAB ==="
 rpm -q gitlab-ee gitlab-ce
 systemctl list-unit-files --type=service | grep -i gitlab
+
+
+
+
+echo "=== MEMOIRE ==="
+vmstat 1 5
+swapon --show
+ps -eo pid,comm,rss,%mem --sort=-rss | head -15
+
+echo "=== DEMARRAGE GITLAB ==="
+systemctl is-enabled gitlab-runsvdir.service
+systemctl status gitlab-runsvdir.service --no-pager
+
+echo "=== MONTAGES GITLAB ==="
+findmnt -T /opt/gitlab
+findmnt -T /var/opt/gitlab
+findmnt -T /var/log/gitlab
