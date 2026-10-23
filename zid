@@ -1,0 +1,36 @@
+2.6. Analyse comparative REC / PPD / PRD
+
+Les trois environnements disposent des mêmes versions applicatives : GitLab 19.1.9-ee, PostgreSQL 17.11 et RHEL 8.10.
+
+Les principales divergences constatées sont :
+
+Critère	REC	PPD	PRD
+vCPU	8	4	4
+RAM	7,5 Gio	12 Gio	11 Gio
+Kernel (révision)	553.174.1	553.158.1	553.158.1
+Swap utilisé	3,5 Gio	480 Mio	600 Mio
+/var/opt/gitlab	7 %	69 %	40 %
+
+Le dimensionnement CPU/RAM diffère entre les environnements. La configuration SELinux et l’organisation des volumes applicatifs sont homogènes.
+
+2.7. Anomalies et points de vigilance
+
+Réf.	Constat	Statut
+GL-01	Swap fortement utilisé en REC, sans activité de pagination observée	À surveiller
+GL-02	Indisponibilité historique GitLab REC/PPD	Cause à confirmer
+GL-03	Certificats HTTPS expirant en février 2027	À renouveler
+GL-04	Différences de dimensionnement CPU/RAM	À justifier
+GL-05	Occupation de /var/opt/gitlab à 69 % en PPD	À surveiller
+
+2.8. Synthèse
+
+Les versions applicatives, la configuration SELinux et l’organisation du stockage sont homogènes sur les trois environnements.
+
+Les principaux écarts concernent le dimensionnement des VM, les révisions du kernel et l’utilisation des ressources.
+
+Aucune anomalie applicative persistante n’a été confirmée lors des contrôles réalisés.
+
+
+
+
+
