@@ -2,11 +2,11 @@
 
 ## 2.1. Présentation générale
 
-GitLab est une plateforme de gestion de code source permettant l'hébergement des dépôts Git, le contrôle de versions et l'intégration et la livraison continues (CI/CD).
+GitLab est une plateforme de gestion de code source permettant l'hébergement de dépôts Git, le contrôle de versions et l'exécution de pipelines d'intégration et de livraison continues (CI/CD).
 
-Le périmètre étudié comprend trois instances GitLab, réparties sur les environnements de recette, préproduction et production.
+Le périmètre étudié comprend trois instances GitLab, réparties sur les environnements de recette (REC), préproduction (PPD) et production (PRD), chacune hébergée sur une machine virtuelle dédiée.
 
-Le présent chapitre décrit l'architecture déployée, les configurations système et applicatives, les mécanismes d'exploitation ainsi que les éventuelles divergences et anomalies constatées.
+Le présent chapitre décrit les caractéristiques des infrastructures, les configurations système et applicatives, les modalités d'exploitation ainsi que les divergences et anomalies identifiées.
 
 ## 2.2. Inventaire des infrastructures
 
@@ -14,307 +14,309 @@ Le présent chapitre décrit l'architecture déployée, les configurations syst�
 
 | Caractéristique | REC | PPD | PRD |
 |---|---|---|---|
-| Hostname | À relever | À relever | À relever |
-| Adresse IP | À relever | À relever | À relever |
-| Distribution Linux | À relever | À relever | À relever |
-| Version OS | À relever | À relever | À relever |
-| Version kernel | À relever | À relever | À relever |
-| vCPU | À relever | À relever | À relever |
-| RAM | À relever | À relever | À relever |
-| Stockage | À relever | À relever | À relever |
-| Version GitLab | À relever | À relever | À relever |
-| Type d'installation | À relever | À relever | À relever |
+| Hostname | À compléter | À relever | À relever |
+| Système d'exploitation | RHEL 8.10 | À relever | À relever |
+| Kernel | 4.18.0-553.174.1.el8_10 | À relever | À relever |
+| CPU | 8 vCPU | À relever | À relever |
+| RAM | 7,5 Gio | À relever | À relever |
+| Swap | 4,1 Gio | À relever | À relever |
+| Version GitLab | 19.1.9-ee | À relever | À relever |
+| PostgreSQL intégré | 17.11 | À relever | À relever |
+| SELinux | Enforcing | À relever | À relever |
+| Supervision | Zabbix | À vérifier | À vérifier |
+
+L'instance GitLab REC ne présente pas d'activité applicative utilisateur selon les informations communiquées.
+
+Les relevés indiquent une faible charge CPU, mais une occupation du swap de l'ordre de 3,4 à 3,5 Gio.
+
+Les mesures complémentaires réalisées avec `vmstat` n'ont toutefois révélé aucune activité de pagination entrante ou sortante sur les intervalles observés.
 
 ### 2.2.2. Architecture technique
 
-Pour chaque instance, l'analyse portera sur :
+Les instances GitLab sont hébergées sur des machines virtuelles distinctes pour chaque environnement.
 
-- Le type de déploiement GitLab.
-- Les services et processus associés.
-- Les points d'entrée HTTP/HTTPS.
-- La présence éventuelle d'un reverse proxy ou load balancer.
-- La configuration du stockage des repositories et des artefacts.
-- Les dépendances réseau et applicatives.
-- Les éventuels composants GitLab hébergés hors de la VM.
+Sur GitLab REC, l'installation repose sur GitLab Enterprise Edition et intègre notamment les composants suivants :
 
-Un schéma d'architecture sera établi à partir de la configuration constatée.
+- Nginx, pour l'exposition du service Web.
+- Puma et GitLab Workhorse, pour le traitement des requêtes applicatives.
+- Sidekiq, pour l'exécution des traitements asynchrones.
+- PostgreSQL, pour le stockage des données applicatives.
+- Redis, pour les fonctions de cache et de traitement interne.
+- Gitaly, pour la gestion des dépôts Git.
+- Prometheus et différents exporters, pour la collecte des métriques.
+
+Les éventuels load balancers, reverse proxies externes et dépendances réseau restent à identifier.
 
 ## 2.3. Audit du socle système
 
 ### 2.3.1. Système d'exploitation
 
-Contrôles à réaliser :
+La VM GitLab REC est hébergée sur Red Hat Enterprise Linux 8.10, avec un kernel de version `4.18.0-553.174.1.el8_10.x86_64`.
 
-- Version du système d'exploitation et du kernel.
-- Niveau de patching.
-- Repositories système configurés.
-- Packages installés et obsolètes.
-- Présence de services inutiles ou en échec.
-- Paramètres système particuliers.
+Les ressources allouées sont de 8 vCPU et 7,5 Gio de mémoire RAM.
+
+Les relevés effectués montrent une faible charge CPU au moment du contrôle.
+
+L'utilisation du swap demeure importante, sans activité de pagination observée durant les mesures complémentaires.
+
+**Statut :** caractéristiques système relevées ; aucune saturation CPU ni activité de swap significative observée pendant les contrôles.
 
 ### 2.3.2. Configuration SELinux
 
-Les contrôles porteront sur :
+SELinux est installé et actif sur GitLab REC.
 
-- Présence des packages SELinux.
-- Mode d'exécution : Enforcing, Permissive ou Disabled.
-- Configuration persistante.
-- Politiques et contextes associés à GitLab.
-- Écarts éventuels par rapport aux standards de sécurité applicables.
+| Paramètre | Valeur |
+|---|---|
+| SELinux | Activé |
+| Mode actif | Enforcing |
+| Politique | Targeted |
+| Packages SELinux | Présents |
 
-La présence de SELinux ne sera pas considérée comme suffisante pour conclure à la conformité : son état et son paramétrage seront également vérifiés.
+La configuration constatée assure l'application des politiques SELinux actives.
+
+La conformité aux standards de sécurité internes ainsi que l'absence de refus SELinux impactant GitLab restent à vérifier.
 
 ### 2.3.3. Arborescence et stockage
 
-L'analyse portera sur :
+L'installation GitLab REC utilise les répertoires suivants :
 
-- Partitionnement des volumes.
-- Points de montage.
-- Organisation des répertoires applicatifs.
-- Séparation des binaires, configurations, données et journaux.
-- Droits et propriétaires des répertoires.
-- Occupation disque et inodes.
-- Cohérence de l'arborescence entre les environnements.
+| Répertoire | Utilisation | Observation |
+|---|---|---|
+| `/etc/gitlab` | Configuration principale | Présent |
+| `/opt/gitlab` | Binaires et composants applicatifs | Volume dédié |
+| `/var/opt/gitlab` | Données applicatives | Volume dédié |
+| `/var/log/gitlab` | Journaux applicatifs | Volume dédié |
 
-La conformité sera évaluée au regard des standards système retenus et des préconisations applicables à la méthode d'installation de GitLab.
+Les volumes applicatifs identifiés utilisent le système de fichiers ext4.
+
+Les taux d'occupation relevés sont les suivants :
+
+| Point de montage | Occupation |
+|---|---:|
+| `/opt/gitlab` | Environ 53 % |
+| `/var/opt/gitlab` | Environ 7 % |
+| `/var/log/gitlab` | Environ 6 % |
+
+La séparation des composants applicatifs, des données et des journaux est effective.
+
+La conformité du partitionnement aux standards internes, ainsi que les propriétaires et permissions des répertoires, restent à vérifier.
 
 ### 2.3.4. Configuration régionale et packages linguistiques
 
-Vérifications :
+Les contrôles réalisés sur GitLab REC confirment la présence du package `glibc-langpack-fr` et la disponibilité des locales françaises.
 
-- Configuration des locales système.
-- Disponibilité des locales françaises.
-- Présence des packages linguistiques requis.
-- Persistance des configurations après mise à jour système.
-- Historique des installations, mises à jour et suppressions de packages.
+**Point de vigilance transversal :** des pertes de disponibilité des locales françaises ont été signalées à la suite de précédentes opérations de patching sur des VM du périmètre.
 
-Une attention particulière sera portée à la disponibilité de `glibc-langpack-fr`, compte tenu des anomalies signalées lors de précédentes opérations de patching sur le périmètre.
+La cause de ces événements n'est pas établie à ce stade.
+
+Aucune anomalie liée aux locales françaises n'a été constatée sur GitLab REC lors du relevé.
 
 ## 2.4. Audit applicatif GitLab
 
 ### 2.4.1. Installation et configuration
 
-- Édition et version GitLab.
-- Méthode d'installation.
-- Emplacement des fichiers de configuration.
-- Paramètres applicatifs spécifiques.
-- Configuration des certificats SSL/TLS.
-- Paramètres de journalisation.
-- Versions et support des composants associés.
+L'instance REC repose sur GitLab Enterprise Edition version **19.1.9-ee**.
+
+Les principaux composants et versions identifiés sont :
+
+| Composant | Version |
+|---|---|
+| GitLab EE | 19.1.9-ee |
+| PostgreSQL | 17.11 |
+| Ruby | 3.3.11 |
+| Redis | 7.2.16 |
+| Sidekiq | 7.3.9 |
+| GitLab Shell | 14.56.1 |
+| Gitaly | 19.1.9 |
+
+L'installation utilise les répertoires standards GitLab, notamment `/etc/gitlab`, `/opt/gitlab` et `/var/opt/gitlab`.
+
+Les éventuelles personnalisations applicatives et différences de paramétrage entre environnements restent à vérifier.
 
 ### 2.4.2. Services et disponibilité
 
-- Inventaire des services GitLab.
-- État des processus.
-- Configuration du démarrage automatique.
-- Dépendances entre services.
-- Santé applicative.
-- Analyse des erreurs présentes dans les journaux.
-- Comportement au redémarrage de la VM, sur la base des observations ou tests autorisés.
+Les contrôles réalisés avec `gitlab-ctl status` indiquent que les principaux services GitLab REC sont actifs.
+
+Le service systemd `gitlab-runsvdir.service` présente les caractéristiques suivantes :
+
+| Contrôle | Résultat |
+|---|---|
+| Service | gitlab-runsvdir.service |
+| Activation au démarrage | enabled |
+| État actuel | active (running) |
+| Gestion des services GitLab | Runit |
+
+Le démarrage automatique du superviseur GitLab est configuré. Son fonctionnement après un redémarrage complet de la VM n'a pas fait l'objet d'un test spécifique.
+
+**Constat :** aucun dysfonctionnement des services GitLab n'a été identifié lors du contrôle.
 
 ### 2.4.3. Stockage et données
 
-- Localisation des repositories Git.
-- Volumétrie des données.
-- Stockage des artefacts CI/CD.
-- Journaux applicatifs et rotation.
-- Gestion de la croissance du stockage.
+Les données GitLab sont hébergées localement sur les volumes applicatifs identifiés.
+
+Le répertoire `/var/opt/gitlab` est monté sur un volume dédié, distinct du volume des binaires et de celui des journaux.
+
+Les éléments suivants restent à vérifier :
+
+- Volumétrie des repositories Git.
+- Volume des artefacts CI/CD.
 - Politique de conservation et de nettoyage.
+- Rotation et rétention des journaux.
+- Évolution de la consommation du stockage.
 
 ### 2.4.4. Authentification et sécurité
 
-- Modes d'authentification configurés.
-- Intégration éventuelle avec les annuaires d'entreprise.
-- Gestion des comptes et privilèges administratifs.
-- Certificats et dates d'expiration.
-- Gestion des tokens et comptes techniques.
-- Contrôle des droits sur les répertoires sensibles.
+Les informations applicatives relevées indiquent que les mécanismes d'authentification LDAP et OmniAuth sont activés sur GitLab REC.
+
+L'instance est accessible en HTTPS et utilise un certificat émis par la PKI interne Crédit Agricole.
+
+| Critère | Résultat |
+|---|---|
+| HTTPS | Présent |
+| Autorité de certification | PKI interne Crédit Agricole |
+| Début de validité du certificat | 29/10/2025 |
+| Expiration du certificat | 28/02/2027 |
+| Répertoire des certificats | `/etc/gitlab/ssl/` |
+
+Le certificat présenté est valide à la date du relevé.
+
+Plusieurs fichiers de certificats et de clés sont présents dans le répertoire SSL. Leur utilisation actuelle, leur nécessité et leurs permissions restent à vérifier.
+
+**Point de vigilance :** renouvellement du certificat à anticiper avant le 28 février 2027.
 
 ### 2.4.5. CI/CD et dépendances
 
-- Présence et configuration des GitLab Runners.
+Les mécanismes CI/CD, les GitLab Runners et les dépendances applicatives externes n'ont pas encore été audités.
+
+Les éléments à documenter sont :
+
+- Présence et configuration des Runners.
 - Modalités d'exécution des pipelines.
-- Connectivité vers les services externes.
-- Dépendances envers Artifactory et les repositories logiciels.
-- Gestion des variables et credentials.
-- Intégration éventuelle avec AAP.
+- Connexions aux repositories Artifactory.
+- Dépendances envers les services externes.
+- Comptes techniques et mécanismes d'authentification associés.
+
+**Statut : À vérifier.**
 
 ## 2.5. Exploitation et maintenance
 
 ### 2.5.1. Opérations courantes
 
-Recensement des procédures techniques :
+Les services GitLab sont administrés à l'aide des commandes de gestion GitLab et de systemd.
 
-- Vérification de l'état de GitLab.
-- Démarrage, arrêt et redémarrage des services.
-- Consultation des logs.
-- Vérification de la connectivité.
-- Diagnostic des erreurs applicatives.
-- Nettoyage et contrôle du stockage.
+Les commandes identifiées comprennent notamment :
+
+- `gitlab-ctl status` : état des services applicatifs.
+- `gitlab-ctl restart` : redémarrage des services.
+- `systemctl status gitlab-runsvdir` : état du superviseur.
+- `journalctl` : consultation des journaux systemd.
+
+Les procédures détaillées d'exploitation restent à documenter.
 
 ### 2.5.2. Patching et mises à jour
 
-- Versions actuellement déployées.
-- Méthodes de mise à jour.
-- Dépendances et prérequis.
-- Précautions avant intervention.
-- Procédures de validation.
-- Possibilités et limites de retour arrière.
+**Statut : Non audité.**
+
+Le niveau de patching, les procédures de mise à jour et les historiques de maintenance ne font pas l'objet d'une analyse dans le cadre des relevés réalisés à ce stade.
 
 ### 2.5.3. Sauvegarde et restauration
 
-- Mécanisme de sauvegarde utilisé.
-- Périmètre des données sauvegardées.
-- Fréquence et rétention.
-- Stockage des sauvegardes.
-- Procédures de restauration.
-- Existence de tests de restauration documentés.
+Des snapshots de la VM GitLab REC sont réalisés manuellement, à la demande, depuis le portail VMware vSphere.
+
+| Critère | Constat |
+|---|---|
+| Mécanisme identifié | Snapshot VMware |
+| Déclenchement | Manuel, à la demande |
+| Sauvegarde GitLab native | À vérifier |
+| Sauvegarde automatique externe | À vérifier |
+| Test de restauration | À vérifier |
+
+Les snapshots constituent des points de retour ponctuels et ne peuvent être assimilés à eux seuls à une stratégie complète de sauvegarde.
+
+**Point de vigilance :** la couverture des sauvegardes et les modalités de restauration restent à établir.
 
 ### 2.5.4. Supervision
 
-- Outils de monitoring utilisés.
-- Services et ressources supervisés.
-- Métriques de disponibilité.
-- Alertes configurées.
-- Centralisation des journaux.
+La supervision de la VM GitLab REC est assurée par **Zabbix**.
+
+Les indicateurs effectivement supervisés, les seuils d'alerte et la couverture applicative restent à vérifier.
+
+Les services Prometheus intégrés à GitLab ont également été observés en fonctionnement.
+
+### 2.5.5. Certificats SSL/TLS
+
+L'instance GitLab REC utilise un certificat délivré par la PKI interne Crédit Agricole, dont la date d'expiration est fixée au 28 février 2027.
+
+Le certificat était valide au moment du contrôle.
+
+La procédure de renouvellement, les responsabilités associées et la gestion des anciens fichiers de certificats restent à documenter.
 
 ## 2.6. Analyse comparative REC / PPD / PRD
 
-L'objectif est d'identifier les divergences techniques et de déterminer si elles sont attendues, justifiées ou nécessitent une investigation.
+La collecte est actuellement réalisée uniquement sur GitLab REC.
 
 | Critère | REC | PPD | PRD |
 |---|---|---|---|
-| Version OS | À relever | À relever | À relever |
-| Version GitLab | À relever | À relever | À relever |
-| CPU / RAM | À relever | À relever | À relever |
-| Partitionnement | À relever | À relever | À relever |
-| SELinux | À relever | À relever | À relever |
-| Services au démarrage | À relever | À relever | À relever |
-| Configuration applicative | À relever | À relever | À relever |
-| Certificats TLS | À relever | À relever | À relever |
-| Sauvegardes | À relever | À relever | À relever |
-| Monitoring | À relever | À relever | À relever |
+| OS | RHEL 8.10 | À relever | À relever |
+| CPU | 8 vCPU | À relever | À relever |
+| RAM | 7,5 Gio | À relever | À relever |
+| GitLab | 19.1.9-ee | À relever | À relever |
+| PostgreSQL | 17.11 | À relever | À relever |
+| SELinux | Enforcing | À relever | À relever |
+| Locale FR | Présente | À relever | À relever |
+| Volumes applicatifs dédiés | Oui | À relever | À relever |
+| Démarrage GitLab | Configuré | À relever | À relever |
+| Supervision | Zabbix | À vérifier | À vérifier |
+| Snapshots VMware | À la demande | À vérifier | À vérifier |
+| Certificat TLS | Expire le 28/02/2027 | À relever | À relever |
 
-Chaque divergence significative fera l'objet d'une description, d'une justification éventuelle et d'une évaluation de son impact.
+**Statut :** comparaison en attente des relevés PPD et PRD.
 
 ## 2.7. Anomalies et incidents identifiés
 
-### 2.7.1. Indisponibilité des interfaces GitLab
+### 2.7.1. Occupation élevée du swap — GitLab REC
 
-**Environnements concernés :** REC et PPD.
+Une occupation d'environ 3,4 à 3,5 Gio sur 4,1 Gio de swap a été observée sur GitLab REC.
 
-**Constat historique :** une indisponibilité des interfaces GitLab REC et PPD a été signalée, conjointement à une indisponibilité d'Artifactory PPD.
+Les mesures `vmstat` n'ont cependant révélé aucune activité de pagination pendant les intervalles contrôlés.
 
-**Éléments de contexte :** les composants concernés étaient situés dans une même zone réseau. Une problématique DNS ou réseau a été envisagée lors du diagnostic.
+Aucune dégradation de performance associée n'a été démontrée.
 
-**Cause racine :** non confirmée à ce stade.
+**Classification :** point de vigilance, sans anomalie de performance confirmée.
 
-**Statut actuel :** à vérifier.
+### 2.7.2. Indisponibilité historique GitLab REC / PPD
 
-**Investigations à documenter :**
-- Disponibilité et état des services locaux.
-- Résolution DNS.
-- Connectivité réseau.
-- Accessibilité des interfaces HTTP/HTTPS.
-- Journaux des services.
-- Référence et conclusion du ticket d'incident.
+Une indisponibilité des interfaces GitLab REC et PPD a été signalée, simultanément à une indisponibilité d'Artifactory PPD.
 
-### 2.7.2. Autres anomalies
+Les composants concernés étaient situés dans une même zone réseau.
 
-Les anomalies supplémentaires relevées au cours des contrôles seront consignées selon la structure suivante :
+Une problématique DNS ou réseau a été envisagée lors du diagnostic, sans confirmation de cause racine dans les informations disponibles.
 
-| Champ | Description |
-|---|---|
-| Identifiant | Référence unique |
-| Composant | Serveur ou service concerné |
-| Symptôme | Dysfonctionnement constaté |
-| Cause | Confirmée ou non déterminée |
-| Impact | Effets techniques observés |
-| Résolution | Correction ou contournement |
-| Statut | Ouvert, résolu, à confirmer |
-| Justificatif | Logs, commandes, ticket |
+**Statut :** historique identifié ; cause et clôture à confirmer.
+
+### 2.7.3. Points de vigilance complémentaires
+
+- Couverture des sauvegardes GitLab non établie.
+- Renouvellement du certificat SSL/TLS à anticiper.
+- Conformité de l'arborescence au standard interne non encore vérifiée.
+- Configuration et couverture des alertes Zabbix à préciser.
 
 ## 2.8. Synthèse et points de vigilance
 
-Cette section sera renseignée à l'issue des relevés techniques et de l'analyse comparative.
+Les contrôles effectués sur GitLab REC permettent d'établir les constats suivants :
 
-Elle présentera :
+- L'instance repose sur GitLab Enterprise Edition 19.1.9-ee et RHEL 8.10.
+- Les principaux services applicatifs sont actifs et leur superviseur est configuré pour démarrer automatiquement.
+- SELinux est activé en mode Enforcing.
+- Les locales françaises sont disponibles.
+- Les composants applicatifs disposent de volumes dédiés.
+- La supervision de la VM est assurée par Zabbix.
+- Les snapshots VMware sont réalisés manuellement, à la demande.
+- Le certificat HTTPS est valide jusqu'au 28 février 2027.
+- Une occupation importante du swap a été relevée, sans activité de pagination observée pendant les mesures.
 
-- Les caractéristiques principales des installations GitLab.
-- Les divergences entre les trois environnements.
-- Les anomalies confirmées.
-- Les risques techniques identifiés.
-- Les points nécessitant une investigation complémentaire.
-- Les éventuelles recommandations.
+Les principales informations restant à compléter concernent la conformité de l'arborescence aux standards internes, les mécanismes de sauvegarde, les dépendances CI/CD et les configurations des instances PPD et PRD.
 
-Les constats seront distingués des hypothèses et des contrôles non réalisés.
+À ce stade, **aucune anomalie de fonctionnement applicatif n'a été confirmée sur GitLab REC lors des contrôles réalisés**.
 
----
-
-**Fin du chapitre 2 — GitLab.**
-
-
-echo "=== SYSTEME ==="
-hostname -f
-cat /etc/os-release
-uname -r
-nproc
-free -h
-uptime
-
-echo "=== PARTITIONS ==="
-lsblk -f
-df -hPT
-findmnt
-
-echo "=== SELINUX ==="
-rpm -q selinux-policy-targeted policycoreutils libselinux-utils
-sestatus
-getenforce
-
-echo "=== LOCALES ==="
-localectl status
-rpm -q glibc-langpack-fr
-locale -a | grep -i fr_FR
-
-echo "=== GITLAB ==="
-rpm -q gitlab-ee gitlab-ce
-systemctl list-unit-files --type=service | grep -i gitlab
-
-
-
-
-echo "=== MEMOIRE ==="
-vmstat 1 5
-swapon --show
-ps -eo pid,comm,rss,%mem --sort=-rss | head -15
-
-echo "=== DEMARRAGE GITLAB ==="
-systemctl is-enabled gitlab-runsvdir.service
-systemctl status gitlab-runsvdir.service --no-pager
-
-echo "=== MONTAGES GITLAB ==="
-findmnt -T /opt/gitlab
-findmnt -T /var/opt/gitlab
-findmnt -T /var/log/gitlab
-
-
-
-
-
-sudo grep -E '^[[:space:]]*(external_url|nginx\[.ssl_certificate)' \
-/etc/gitlab/gitlab.rb
-
-
-2. Identifier le certificat présenté par GitLab
-
-Remplace gitlab.example.com par le FQDN de ton instance :
-echo | openssl s_client \
--connect gitlab.example.com:443 \
--servername gitlab.example.com 2>/dev/null \
-| openssl x509 -noout \
--subject -issuer -dates
-
-
-3. Vérifier les certificats locaux
-sudo ls -l /etc/gitlab/ssl/
+La comparaison inter-environnements sera finalisée après collecte des informations relatives à GitLab PPD et PRD.
