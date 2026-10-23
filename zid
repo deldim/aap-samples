@@ -33,4 +33,19 @@ Aucune anomalie applicative persistante n’a été confirmée lors des contrôl
 
 
 
+2.7. Anomalies et incidents identifiés
 
+Les incidents GitLab recensés sont liés à une occupation excessive des espaces disque.
+
+Constat	Cause	Résolution	Statut
+Saturation des volumes disque	Consommation élevée du stockage	Extension des volumes par l’équipe Linux	Résolu
+
+Point de vigilance : surveiller l’évolution de l’occupation disque afin d’anticiper de nouvelles saturations.
+
+2.8. Synthèse
+
+Les trois environnements présentent des versions applicatives et des configurations système globalement homogènes.
+
+Les principales divergences concernent le dimensionnement des VM et l’utilisation des ressources.
+
+Les incidents GitLab recensés ont été résolus par extension des volumes disque. Aucun incident lié au stockage n’est signalé comme restant ouvert.
