@@ -1,17 +1,1 @@
-### 3.4.5. Dépôts et dépendances
-
-Les instances Artifactory utilisent des repositories miroirs avec stockage local des artefacts (*Store Locally*).
-
-| Environnement | Source des repositories miroirs |
-|---|---|
-| REC | À préciser |
-| PPD | Artifactory d'un périmètre externe |
-| PRD | Artifactory PPD |
-
-La chaîne de récupération des artefacts est la suivante :
-
-**Artifactory externe → PPD → PRD**
-
-L'option *Store Locally* permet de conserver les artefacts téléchargés et de les réutiliser sans solliciter systématiquement l'instance source.
-
-**Point de vigilance :** en cas d'indisponibilité de l'instance source, les artefacts déjà présents dans le cache local peuvent rester accessibles. La récupération de nouveaux artefacts dépend toutefois de la disponibilité de la source.
+- **Repositories miroirs :** organisation en cascade (Artifactory externe → PPD → PRD), avec stockage local des artefacts (*Store Locally*). Les artefacts déjà mis en cache restent accessibles en cas d'indisponibilité de la source ; la récupération de nouveaux artefacts nécessite sa disponibilité.
