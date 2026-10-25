@@ -1,0 +1,29 @@
+3.3.1. Système d’exploitation
+
+Les trois VM fonctionnent sous RHEL 8.10 et présentent une faible charge CPU.
+
+Caractéristique	REC	PPD	PRD
+Charge CPU	Faible	Faible	Faible
+Swap utilisé	0 Gio	2 Mio	960 Mio
+
+3.3.2. Configuration SELinux
+
+Caractéristique	REC	PPD	PRD
+Présence	Installé	Installé	Installé
+Mode actif	Enforcing	Enforcing	Enforcing
+Politique	Targeted	Targeted	Targeted
+
+Configuration homogène sur les trois environnements.
+
+3.3.3. Arborescence et stockage
+
+Les binaires, données applicatives et journaux disposent de volumes dédiés.
+
+Point de montage	REC	PPD	PRD
+/tools/list/product	4,9 Go — 97 %	8,9 Go — 50 %	11 Go — 51 %
+/app/list/jfrog	30 Go — 48 %	1,2 To — 65 %	1 To — 12 %
+/app/list/logs/jfrog	8,9 Go — 43 %	109 Go — 16 %	41 Go — 12 %
+
+Anomalie : occupation critique de /tools/list/product en REC (97 %).
+
+Point de vigilance : occupation du volume de données plus élevée en PPD (65 %) qu’en PRD (12 %).
