@@ -1,29 +1,187 @@
-3.3.1. Système d’exploitation
+Caractéristique
 
-Les trois VM fonctionnent sous RHEL 8.10 et présentent une faible charge CPU.
+REC
 
-Caractéristique	REC	PPD	PRD
-Charge CPU	Faible	Faible	Faible
-Swap utilisé	0 Gio	2 Mio	960 Mio
+PPD
 
-3.3.2. Configuration SELinux
+PRD
 
-Caractéristique	REC	PPD	PRD
-Présence	Installé	Installé	Installé
-Mode actif	Enforcing	Enforcing	Enforcing
-Politique	Targeted	Targeted	Targeted
+Méthode d'installation
 
-Configuration homogène sur les trois environnements.
+Archive ZIP
 
-3.3.3. Arborescence et stockage
+À relever
 
-Les binaires, données applicatives et journaux disposent de volumes dédiés.
+À relever
 
-Point de montage	REC	PPD	PRD
-/tools/list/product	4,9 Go — 97 %	8,9 Go — 50 %	11 Go — 51 %
-/app/list/jfrog	30 Go — 48 %	1,2 To — 65 %	1 To — 12 %
-/app/list/logs/jfrog	8,9 Go — 43 %	109 Go — 16 %	41 Go — 12 %
+Version Artifactory
 
-Anomalie : occupation critique de /tools/list/product en REC (97 %).
+À confirmer
 
-Point de vigilance : occupation du volume de données plus élevée en PPD (65 %) qu’en PRD (12 %).
+À relever
+
+À relever
+
+Répertoire applicatif
+
+/tools/list/product/artifactory/app
+
+À relever
+
+À relever
+
+Compte d'exploitation
+
+jfrogadm
+
+À relever
+
+À relever
+
+Script de gestion
+
+app/bin/artifactory.sh
+
+À relever
+
+À relever
+
+Magasin de certificats Java
+
+Centralisé via lien symbolique
+
+À vérifier
+
+À vérifier
+
+La procédure de mise à jour REC repose sur le remplacement manuel du répertoire applicatif, avec conservation temporaire de l'ancienne version.
+
+La version 7.133.12 est mentionnée dans la procédure de mise à jour fournie, sans confirmation de la version actuellement exécutée.
+
+Le magasin de certificats Java pointe vers /tools/list/product/cacerts/cacerts.
+
+3.4.2. Services et disponibilité
+
+Contrôle
+
+REC
+
+PPD
+
+PRD
+
+Service Artifactory
+
+Script artifactory.sh
+
+À relever
+
+À relever
+
+Service systemd Artifactory
+
+Non identifié
+
+À vérifier
+
+À vérifier
+
+Service HTTPD
+
+httpd_arti.service
+
+À relever
+
+À relever
+
+Activation automatique HTTPD
+
+Disabled
+
+À vérifier
+
+À vérifier
+
+Démarrage après reboot
+
+Manuel
+
+À vérifier
+
+À vérifier
+
+Anomalie constatée en REC : les services Artifactory et HTTPD ne redémarrent pas automatiquement après un reboot de la VM.
+
+Le service HTTPD personnalisé est présent mais désactivé. Artifactory est exploité via un script de démarrage manuel, sans unité systemd dédiée identifiée.
+
+Le fonctionnement de ces services reste à comparer avec les environnements PPD et PRD.
+
+3.7. Anomalies et incidents identifiés
+
+Réf.
+
+Constat
+
+REC
+
+PPD
+
+PRD
+
+ART-01
+
+Artifactory ne démarre pas automatiquement
+
+Confirmé
+
+À vérifier
+
+À vérifier
+
+ART-02
+
+HTTPD ne démarre pas automatiquement
+
+Confirmé
+
+À vérifier
+
+À vérifier
+
+ART-03
+
+Occupation disque élevée
+
+97 % sur /tools/list/product
+
+À relever
+
+À relever
+
+ART-04
+
+Incident de forte utilisation du swap
+
+Environnement à confirmer
+
+Environnement à confirmer
+
+Environnement à confirmer
+
+Les incidents historiques Artifactory concernent principalement des occupations disque élevées. Un incident lié à une forte consommation du swap a également été signalé.
+
+3.8. Synthèse et points de vigilance
+
+Les premiers relevés réalisés sur Artifactory REC mettent en évidence :
+
+Une installation applicative manuelle à partir d'archives ZIP.
+
+Une séparation des volumes applicatifs, données et journaux.
+
+Une occupation de 97 % du volume /tools/list/product.
+
+L'absence de démarrage automatique des services Artifactory et HTTPD.
+
+L'utilisation d'un magasin de certificats Java centralisé.
+
+L'analyse comparative sera complétée après collecte des configurations PPD et PRD.
