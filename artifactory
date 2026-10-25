@@ -1,0 +1,309 @@
+# 3. État des lieux technique — Artifactory
+
+## 3.1. Présentation générale
+
+JFrog Artifactory est une plateforme de gestion et de distribution des artefacts logiciels permettant la centralisation des packages, bibliothèques, images conteneurs et autres dépendances utilisées dans les processus de développement et de déploiement.
+
+Le périmètre étudié comprend trois instances Artifactory, réparties sur les environnements de recette (REC), préproduction (PPD) et production (PRD), chacune hébergée sur une machine virtuelle dédiée.
+
+Le présent chapitre décrit les caractéristiques des infrastructures, les configurations système et applicatives, les modalités d'exploitation ainsi que les divergences et anomalies identifiées.
+
+## 3.2. Inventaire des infrastructures
+
+### 3.2.1. Caractéristiques des VM
+
+| Caractéristique | REC | PPD | PRD |
+|---|---|---|---|
+| Hostname | À relever | À relever | À relever |
+| Système d'exploitation | À relever | À relever | À relever |
+| Kernel | À relever | À relever | À relever |
+| CPU | À relever | À relever | À relever |
+| RAM | À relever | À relever | À relever |
+| Swap | À relever | À relever | À relever |
+| Version Artifactory | À relever | À relever | À relever |
+| SELinux | À relever | À relever | À relever |
+| Supervision | À vérifier | À vérifier | À vérifier |
+
+Les ressources allouées et leur utilisation seront analysées afin d'identifier d'éventuelles différences de dimensionnement entre les trois environnements.
+
+Une attention particulière sera portée aux capacités de stockage et à la consommation mémoire, compte tenu des incidents déjà rencontrés sur les instances Artifactory.
+
+## 3.3. Audit du socle système
+
+### 3.3.1. Système d'exploitation
+
+Les versions du système d'exploitation, du kernel et les ressources allouées aux VM Artifactory restent à relever.
+
+Les contrôles porteront principalement sur :
+
+- Le dimensionnement CPU et RAM.
+- L'utilisation de la mémoire et du swap.
+- La disponibilité des ressources système.
+- Les éventuelles divergences entre environnements.
+
+Un incident relatif à une consommation élevée du swap a été signalé sur le périmètre Artifactory.
+
+L'environnement concerné, le niveau d'utilisation constaté et les éventuelles actions correctives restent à préciser.
+
+### 3.3.2. Configuration SELinux
+
+La présence et le mode de fonctionnement de SELinux seront vérifiés sur les trois machines.
+
+| Paramètre | REC | PPD | PRD |
+|---|---|---|---|
+| SELinux installé | À relever | À relever | À relever |
+| Mode actif | À relever | À relever | À relever |
+| Politique appliquée | À relever | À relever | À relever |
+
+La conformité sera évaluée au regard des standards de sécurité internes et des éventuelles contraintes liées au fonctionnement d'Artifactory.
+
+### 3.3.3. Arborescence et stockage
+
+L'analyse portera sur l'organisation des répertoires applicatifs, la répartition des volumes et leur taux d'occupation.
+
+Les principaux éléments à identifier sont :
+
+- Répertoires d'installation et de configuration.
+- Emplacement des données et des repositories.
+- Répertoires de logs.
+- Points de montage et systèmes de fichiers.
+- Capacités et taux d'occupation.
+- Propriétaires et permissions.
+
+| Contrôle | REC | PPD | PRD |
+|---|---|---|---|
+| Répertoire d'installation | À relever | À relever | À relever |
+| Répertoire des données | À relever | À relever | À relever |
+| Répertoire des logs | À relever | À relever | À relever |
+| Volumes dédiés | À relever | À relever | À relever |
+| Occupation disque | À relever | À relever | À relever |
+
+La majorité des incidents Artifactory signalés concerne une occupation disque élevée.
+
+Ces incidents justifient une attention particulière à la capacité des volumes hébergeant les données applicatives, les repositories et les journaux.
+
+La conformité de l'arborescence aux standards internes reste à vérifier.
+
+### 3.3.4. Configuration régionale et packages linguistiques
+
+La configuration des locales système et la présence du package `glibc-langpack-fr` seront vérifiées sur les trois VM.
+
+Des anomalies de disponibilité des locales françaises ayant déjà été rencontrées après des opérations de patching sur le périmètre, ce contrôle sera intégré à l'état des lieux.
+
+**Statut :** à vérifier sur REC, PPD et PRD.
+
+## 3.4. Audit applicatif Artifactory
+
+### 3.4.1. Installation et configuration
+
+Les instances Artifactory sont hébergées sur des machines virtuelles dédiées.
+
+Les versions applicatives, méthodes d'installation et principaux paramètres seront relevés pour chaque environnement.
+
+| Composant | REC | PPD | PRD |
+|---|---|---|---|
+| Version Artifactory | À relever | À relever | À relever |
+| Méthode d'installation | À relever | À relever | À relever |
+| Répertoire de configuration | À relever | À relever | À relever |
+| Répertoire des données | À relever | À relever | À relever |
+| Services associés | À relever | À relever | À relever |
+
+L'analyse permettra notamment d'identifier les différences de versions et de configuration entre la préproduction et la production.
+
+### 3.4.2. Services et disponibilité
+
+Le fonctionnement des instances repose notamment sur le service applicatif Artifactory et sur un service HTTPD associé à l'accès HTTPS.
+
+Un dysfonctionnement a été constaté lors du redémarrage des machines virtuelles :
+
+- Le service Artifactory ne redémarre pas automatiquement.
+- Le service HTTPD ne redémarre pas automatiquement.
+
+Ces comportements nécessitent une intervention manuelle pour rétablir les services concernés après redémarrage des VM.
+
+| Contrôle | REC | PPD | PRD |
+|---|---|---|---|
+| Service Artifactory | À relever | À relever | À relever |
+| Activation automatique | À vérifier | À vérifier | À vérifier |
+| Service HTTPD | À relever | À relever | À relever |
+| Activation automatique HTTPD | À vérifier | À vérifier | À vérifier |
+| État des services | À relever | À relever | À relever |
+
+Les configurations systemd, les dépendances entre services et les journaux de démarrage devront être examinés afin d'identifier la cause de ces dysfonctionnements.
+
+**Anomalie identifiée :** absence de redémarrage automatique des services Artifactory et HTTPD après reboot des VM, selon les observations rapportées.
+
+### 3.4.3. Stockage et données
+
+Les données Artifactory comprennent notamment les artefacts hébergés dans les repositories, les métadonnées et les fichiers applicatifs.
+
+Les contrôles porteront sur :
+
+- La localisation du stockage des artefacts.
+- La volumétrie des repositories.
+- La capacité des volumes.
+- Les mécanismes de nettoyage et de rétention.
+- L'évolution de l'occupation disque.
+
+Les incidents récurrents de forte occupation disque nécessitent de vérifier l'adéquation entre les capacités allouées et la volumétrie réelle des données.
+
+Les mécanismes de nettoyage automatique et les politiques de conservation restent à documenter.
+
+### 3.4.4. Authentification et sécurité
+
+L'analyse portera sur les mécanismes d'authentification configurés et les principaux paramètres de sécurité.
+
+| Critère | REC | PPD | PRD |
+|---|---|---|---|
+| Authentification LDAP/SSO | À vérifier | À vérifier | À vérifier |
+| Gestion des utilisateurs et groupes | À vérifier | À vérifier | À vérifier |
+| Comptes techniques | À vérifier | À vérifier | À vérifier |
+| Accès HTTPS | À vérifier | À vérifier | À vérifier |
+| Certificats SSL/TLS | À relever | À relever | À relever |
+
+La configuration et les permissions des comptes techniques seront examinées sans exposer les secrets associés.
+
+### 3.4.5. Dépôts et dépendances
+
+Artifactory permet la gestion de différents types de repositories, notamment locaux, distants et virtuels.
+
+Les éléments suivants seront recensés :
+
+- Repositories configurés et types associés.
+- Formats de packages utilisés.
+- Dépendances vers des repositories externes.
+- Intégrations avec GitLab et les autres plateformes.
+- Gestion des permissions d'accès aux dépôts.
+
+**Statut :** inventaire des repositories et dépendances à compléter.
+
+## 3.5. Exploitation et maintenance
+
+### 3.5.1. Opérations courantes
+
+L'exploitation des plateformes Artifactory comprend principalement :
+
+- La vérification de l'état des services.
+- Le démarrage et l'arrêt des services Artifactory et HTTPD.
+- La consultation des journaux applicatifs.
+- Le contrôle de la disponibilité HTTPS.
+- La surveillance de l'occupation disque et mémoire.
+
+Le dysfonctionnement du démarrage automatique constitue un point de vigilance lors des redémarrages des VM.
+
+Les commandes et procédures de redémarrage manuel restent à documenter.
+
+### 3.5.2. Patching et mises à jour
+
+**Statut : Non audité.**
+
+Les versions des composants et leurs éventuelles divergences seront néanmoins relevées dans le cadre de l'inventaire technique.
+
+### 3.5.3. Sauvegarde et restauration
+
+Les mécanismes de sauvegarde des instances Artifactory restent à préciser.
+
+| Critère | REC | PPD | PRD |
+|---|---|---|---|
+| Sauvegarde VM | À vérifier | À vérifier | À vérifier |
+| Snapshots VMware | À vérifier | À vérifier | À vérifier |
+| Sauvegarde applicative | À vérifier | À vérifier | À vérifier |
+| Procédure de restauration | À vérifier | À vérifier | À vérifier |
+
+La présence de snapshots éventuels ne préjuge pas de l'existence d'une stratégie complète de sauvegarde des données Artifactory.
+
+### 3.5.4. Supervision
+
+Les mécanismes de supervision des instances Artifactory restent à confirmer.
+
+Les principaux indicateurs à identifier sont :
+
+- Disponibilité de la VM et des services.
+- Consommation CPU et RAM.
+- Occupation du swap.
+- Occupation des volumes disque.
+- Alertes de disponibilité et de capacité.
+
+Compte tenu des incidents historiques, une attention particulière sera portée à la surveillance des volumes de données.
+
+### 3.5.5. Certificats SSL/TLS
+
+L'accès HTTPS associé au service HTTPD fera l'objet d'un relevé des certificats et de leurs dates d'expiration.
+
+| Critère | REC | PPD | PRD |
+|---|---|---|---|
+| Certificat présenté | À relever | À relever | À relever |
+| Autorité de certification | À relever | À relever | À relever |
+| Date d'expiration | À relever | À relever | À relever |
+| Renouvellement | À vérifier | À vérifier | À vérifier |
+
+## 3.6. Analyse comparative REC / PPD / PRD
+
+La comparaison des environnements sera établie à partir des relevés techniques.
+
+| Critère | REC | PPD | PRD |
+|---|---|---|---|
+| OS | À relever | À relever | À relever |
+| Version Artifactory | À relever | À relever | À relever |
+| Kernel | À relever | À relever | À relever |
+| vCPU | À relever | À relever | À relever |
+| RAM | À relever | À relever | À relever |
+| Swap utilisé | À relever | À relever | À relever |
+| Occupation disque | À relever | À relever | À relever |
+| SELinux | À relever | À relever | À relever |
+| Démarrage automatique | À vérifier | À vérifier | À vérifier |
+| Supervision | À vérifier | À vérifier | À vérifier |
+| Certificats HTTPS | À relever | À relever | À relever |
+
+L'analyse permettra d'identifier les divergences de versions, de dimensionnement, de stockage et de configuration des services.
+
+## 3.7. Anomalies et incidents identifiés
+
+Les incidents et dysfonctionnements suivants ont été signalés sur le périmètre Artifactory.
+
+| Réf. | Constat | Statut |
+|---|---|---|
+| ART-01 | Absence de redémarrage automatique d'Artifactory après reboot VM | Cause à identifier |
+| ART-02 | Absence de redémarrage automatique de HTTPD après reboot VM | Cause à identifier |
+| ART-03 | Incidents récurrents liés à une occupation disque élevée | Historique à compléter |
+| ART-04 | Incident lié à une consommation élevée du swap | À documenter |
+
+### 3.7.1. Démarrage automatique des services
+
+Les services Artifactory et HTTPD ne redémarrent pas automatiquement lors du redémarrage des VM concernées.
+
+Le démarrage manuel est nécessaire pour rétablir leur fonctionnement.
+
+**Cause racine :** à déterminer.
+
+**Point de vigilance :** vérifier l'état des deux services à l'issue de toute opération impliquant un redémarrage de la VM.
+
+### 3.7.2. Incidents de saturation disque
+
+La majorité des incidents Artifactory signalés est liée à une consommation élevée des espaces disque.
+
+Les volumes concernés, les seuils atteints et les solutions appliquées restent à consolider.
+
+**Point de vigilance :** surveiller la croissance des données et anticiper les besoins d'extension des volumes.
+
+### 3.7.3. Incident de consommation élevée du swap
+
+Un incident de forte occupation du swap a également été signalé.
+
+L'environnement concerné, les circonstances, l'impact et les mesures correctives restent à documenter.
+
+**Statut :** incident historique à qualifier.
+
+## 3.8. Synthèse et points de vigilance
+
+L'état des lieux des plateformes Artifactory reste à compléter par les relevés techniques REC, PPD et PRD.
+
+Les principales anomalies identifiées concernent :
+
+- L'absence de redémarrage automatique des services Artifactory et HTTPD.
+- Les incidents récurrents de forte occupation disque.
+- Un incident de consommation élevée du swap.
+
+Les principaux points de vigilance portent sur la disponibilité des services après reboot, la capacité de stockage et la consommation mémoire.
+
+L'analyse comparative permettra de compléter l'évaluation de la cohérence des configurations entre les trois environnements.
