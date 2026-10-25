@@ -1,68 +1,17 @@
-## 3.6. Analyse comparative REC / PPD / PRD
+### 3.4.5. Dépôts et dépendances
 
-Les trois environnements Artifactory reposent sur RHEL 8.10 et disposent de la même version applicative (7.146.34).
+Les instances Artifactory utilisent des repositories miroirs avec stockage local des artefacts (*Store Locally*).
 
-Les principales caractéristiques et divergences relevées sont présentées ci-dessous.
+| Environnement | Source des repositories miroirs |
+|---|---|
+| REC | À préciser |
+| PPD | Artifactory d'un périmètre externe |
+| PRD | Artifactory PPD |
 
-| Critère | REC | PPD | PRD |
-|---|---|---|---|
-| OS | RHEL 8.10 | RHEL 8.10 | RHEL 8.10 |
-| Artifactory | 7.146.34 | 7.146.34 | 7.146.34 |
-| CPU utilisé | ~3 % | ~15 % | ~3 % |
-| RAM | 15 Gio | 19 Gio | 9,5 Gio |
-| Swap utilisé | 0 Gio | 2,5 Mio | 965 Mio |
-| SELinux | Enforcing | Enforcing | Enforcing |
-| Volume applicatif `/tools/list/product` | 97 % | 50 % | 51 % |
-| Volume de données `/app/list/jfrog` | 48 % | 65 % | 12 % |
-| Démarrage automatique | Non opérationnel | À vérifier | À vérifier |
-| Certificats HTTPS | À compléter | À compléter | À compléter |
+La chaîne de récupération des artefacts est la suivante :
 
-### 3.6.1. Divergences identifiées
+**Artifactory externe → PPD → PRD**
 
-- **Dimensionnement mémoire :** la PPD dispose de 19 Gio de RAM contre 9,5 Gio en PRD.
-- **Stockage :** le volume `/tools/list/product` atteint 97 % en REC. Le volume de données présente une occupation plus importante en PPD (65 %) qu'en PRD (12 %).
-- **Swap :** la PRD présente une occupation supérieure à REC et PPD, sans activité de pagination observée.
+L'option *Store Locally* permet de conserver les artefacts téléchargés et de les réutiliser sans solliciter systématiquement l'instance source.
 
-Les versions applicatives et la configuration SELinux sont homogènes sur les trois environnements.
-
-
-## 3.7. Anomalies et incidents identifiés
-
-Les principaux incidents recensés sur le périmètre Artifactory concernent la saturation des espaces disque, le démarrage automatique des services et la consommation du swap.
-
-| Réf. | Environnement | Constat | Statut |
-|---|---|---|---|
-| ART-01 | REC | Artifactory ne démarre pas automatiquement après reboot | Confirmé |
-| ART-02 | REC | HTTPD ne démarre pas automatiquement après reboot (service désactivé) | Confirmé |
-| ART-03 | REC | Occupation de `/tools/list/product` à 97 % | Anomalie active |
-| ART-04 | REC / PPD / PRD | Incidents historiques liés à une occupation disque élevée | Historique |
-| ART-05 | À préciser | Incident de forte consommation du swap | Historique |
-
-### 3.7.1. Démarrage automatique des services
-
-Sur REC, Artifactory est démarré manuellement via `artifactory.sh`, tandis que le service `httpd_arti.service` est désactivé dans systemd.
-
-**Impact :** intervention manuelle nécessaire après redémarrage de la VM.
-
-### 3.7.2. Occupation disque
-
-Le volume `/tools/list/product` de REC présente un taux d'occupation de 97 %.
-
-Les incidents historiques liés au stockage ont principalement nécessité des interventions sur la capacité des volumes.
-
-### 3.7.3. Consommation du swap
-
-Un incident de forte utilisation du swap a été signalé. L'environnement concerné et les actions correctives restent à préciser.
-
-## 3.8. Synthèse et points de vigilance
-
-Les trois instances Artifactory présentent des versions applicatives identiques et une configuration SELinux homogène.
-
-Les principaux points de vigilance sont :
-
-- **Démarrage des services :** absence de redémarrage automatique d'Artifactory et HTTPD sur REC.
-- **Stockage :** occupation critique de `/tools/list/product` sur REC (97 %) et occupation plus élevée des données en PPD (65 %) qu'en PRD (12 %).
-- **Dimensionnement :** différences de RAM entre environnements, notamment PPD (19 Gio) et PRD (9,5 Gio).
-- **Swap :** incident historique à documenter, sans pression mémoire active observée lors des derniers relevés.
-
-**Conclusion :** les principales anomalies identifiées concernent le démarrage automatique des services et la capacité de stockage. Les différences de dimensionnement entre environnements sont également à signaler.
+**Point de vigilance :** en cas d'indisponibilité de l'instance source, les artefacts déjà présents dans le cache local peuvent rester accessibles. La récupération de nouveaux artefacts dépend toutefois de la disponibilité de la source.
