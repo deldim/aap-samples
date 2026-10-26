@@ -1,0 +1,11 @@
+additional_build_steps:
+  prepend_base:
+    # Désactiver le plugin subscription-manager
+    - RUN mkdir -p /etc/dnf/plugins
+    - RUN printf '[main]\nenabled=0\n' > /etc/dnf/plugins/subscription-manager.conf
+
+    # Activer CodeReady Builder
+    - RUN sed -i '/^\[codeready-builder-for-rhel-8-x86_64-rpms\]/,/^\[/{s/^enabled=.*/enabled=1/;}' /etc/yum.repos.d/redhat.repo
+
+    # Vérifier les dépôts
+    - RUN microdnf repolist
