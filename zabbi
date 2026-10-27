@@ -1,0 +1,1 @@
+- "RUN sed -i -e 's/^sslverify=.*/sslverify=0/' -e '/^sslclientcert=/d' -e '/^sslclientkey=/d' /etc/yum.repos.d/redhat.repo"
