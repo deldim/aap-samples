@@ -9,3 +9,8 @@ additional_build_steps:
 
     # Vérifier les dépôts
     - RUN microdnf repolist
+
+
+additional_build_steps:
+  prepend_base:
+    - ENV PKGMGR_OPTS="--disableplugin=subscription-manager --nodocs --setopt install_weak_deps=0"
